@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+
+const CALENDLY_URL = "https://calendly.com/virtueaze-vr/30min?back=1";
 
 const MAX_SCALE = 2.1;
 // Roughly where the tower sits in the source photo, used as the zoom's
@@ -55,11 +58,47 @@ export default function HeroZoom() {
           />
         </div>
 
-        {/* Subtle scrims so the transparent header and scroll cue stay legible. */}
+        {/* Subtle scrims so the transparent header and intro text stay legible. */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-background/60 to-transparent" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-96 bg-gradient-to-t from-background via-background/70 to-transparent" />
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-10 px-6 text-center sm:bottom-14">
+        <div
+          className={`absolute inset-x-0 bottom-24 px-6 transition-opacity duration-500 sm:bottom-28 lg:px-12 ${
+            started ? "opacity-0" : "opacity-100"
+          }`}
+        >
+          <div className="mx-auto max-w-7xl">
+            <span className="eyebrow text-xs uppercase text-accent">
+              Digital Twin Platform
+            </span>
+            <h1 className="mt-4 max-w-lg text-4xl font-bold tracking-tight sm:text-5xl">
+              See every tower before it&apos;s built.
+            </h1>
+            <p className="mt-6 max-w-md text-foreground/70">
+              VirtuEaze turns drawings into a fully interactive 3D digital
+              twin — buyers explore the exterior, the interiors, and the
+              neighbourhood before a single brick is laid.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-4">
+              <a
+                href={CALENDLY_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-full bg-accent px-8 py-3 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90"
+              >
+                Book a Demo
+              </a>
+              <Link
+                href="/projects"
+                className="rounded-full border border-border px-8 py-3 text-sm font-medium transition-colors hover:border-accent"
+              >
+                View Projects
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <div className="pointer-events-none absolute inset-x-0 bottom-8 px-6 text-center">
           <span
             className={`eyebrow text-xs uppercase text-accent transition-opacity duration-500 ${
               started ? "opacity-0" : "opacity-100"
@@ -68,11 +107,6 @@ export default function HeroZoom() {
             Scroll to zoom in
           </span>
         </div>
-
-        <h1 className="sr-only">
-          Sell your property before you build it — VirtuEaze interactive 3D
-          digital twins
-        </h1>
       </div>
     </section>
   );
