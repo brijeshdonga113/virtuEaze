@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight, ChevronDown } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 type PanelId = "projects" | "downloads";
 
@@ -202,12 +203,15 @@ export default function Nav() {
           </motion.div>
         </div>
 
-        <Link
-          href="/contact"
-          className="rounded-full bg-accent px-5 py-2 text-xs font-medium uppercase tracking-[0.15em] text-background transition-opacity hover:opacity-90"
-        >
-          Book a Demo
-        </Link>
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <Link
+            href="/contact"
+            className="rounded-full bg-accent px-5 py-2 text-xs font-medium uppercase tracking-[0.15em] text-accent-foreground transition-opacity hover:opacity-90"
+          >
+            Book a Demo
+          </Link>
+        </div>
       </nav>
 
       <nav className="relative flex h-16 items-center justify-between px-5 sm:px-8 lg:hidden">
@@ -216,10 +220,11 @@ export default function Nav() {
         </Link>
 
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           <Link
             href="/contact"
             onClick={closeAll}
-            className="rounded-full bg-accent px-4 py-1.5 text-xs font-medium uppercase tracking-[0.15em] text-background"
+            className="rounded-full bg-accent px-4 py-1.5 text-xs font-medium uppercase tracking-[0.15em] text-accent-foreground"
           >
             Book a Demo
           </Link>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import ContactForm from "@/components/ContactForm";
 
 export const metadata: Metadata = {
   title: "Contact — VirtuEaze",
@@ -20,7 +21,7 @@ export default function ContactPage() {
         href="https://calendly.com/virtueaze-vr/30min?back=1"
         target="_blank"
         rel="noreferrer"
-        className="mt-8 inline-block rounded-full bg-accent px-8 py-3 text-sm font-medium text-background transition-opacity hover:opacity-90"
+        className="mt-8 inline-block rounded-full bg-accent px-8 py-3 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90"
       >
         Book a 30-Minute Demo
       </a>
@@ -68,48 +69,7 @@ export default function ContactPage() {
           </div>
         </div>
 
-        {/* Static form UI — wire to an email/API backend before launch. */}
-        <form className="flex flex-col gap-6">
-          <div className="flex flex-col gap-2">
-            <label htmlFor="name" className="text-sm text-foreground/60">
-              Name
-            </label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              className="border-b border-border bg-transparent py-2 outline-none focus:border-accent"
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label htmlFor="email" className="text-sm text-foreground/60">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              className="border-b border-border bg-transparent py-2 outline-none focus:border-accent"
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label htmlFor="message" className="text-sm text-foreground/60">
-              Tell us about your project
-            </label>
-            <textarea
-              id="message"
-              name="message"
-              rows={4}
-              className="border-b border-border bg-transparent py-2 outline-none focus:border-accent"
-            />
-          </div>
-          <button
-            type="submit"
-            className="mt-4 self-start rounded-full bg-accent px-8 py-3 text-sm font-medium text-background transition-opacity hover:opacity-90"
-          >
-            Send
-          </button>
-        </form>
+        <ContactForm />
       </div>
     </div>
   );
