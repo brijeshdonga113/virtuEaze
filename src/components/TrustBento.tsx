@@ -40,7 +40,7 @@ export default function TrustBento() {
 
         <div className="mt-16 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:grid-rows-2">
           {/* 30% faster decisions — wide card blending into its golden-hour render. */}
-          <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-b from-muted via-[#2f2820] to-[#4a3d33] p-8 sm:col-span-2">
+          <div className="trust-card-1 relative overflow-hidden rounded-3xl border border-border p-8 sm:col-span-2">
             <h3 className="text-2xl font-semibold tracking-tight">
               30% faster decisions
             </h3>
@@ -55,7 +55,7 @@ export default function TrustBento() {
                 sizes="(min-width: 1024px) 40vw, 100vw"
                 className="object-cover object-center"
               />
-              <div className="absolute inset-0 bg-gradient-to-b from-[#4a3d33] via-transparent to-transparent" />
+              <div className="trust-card-1-fade absolute inset-0" />
             </div>
           </div>
 
@@ -79,14 +79,14 @@ export default function TrustBento() {
                   {initials}
                 </span>
               ))}
-              <span className="-ml-3 flex h-10 w-10 items-center justify-center rounded-full bg-accent text-[10px] font-semibold text-background">
+              <span className="-ml-3 flex h-10 w-10 items-center justify-center rounded-full bg-accent text-[10px] font-semibold text-accent-foreground">
                 +68
               </span>
             </div>
           </div>
 
           {/* Perfect for launches — tall accent card blending into the dusk shot. */}
-          <div className="relative flex flex-col overflow-hidden rounded-3xl border border-accent/40 bg-gradient-to-b from-accent/15 via-[#3a3040] to-[#534255] p-8 lg:row-span-2">
+          <div className="trust-card-2 relative flex flex-col overflow-hidden rounded-3xl border border-accent/40 p-8 lg:row-span-2">
             <h3 className="text-2xl font-semibold tracking-tight">
               Perfect for launches
             </h3>
@@ -123,7 +123,7 @@ export default function TrustBento() {
                 sizes="(min-width: 1024px) 22vw, 100vw"
                 className="object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-b from-[#534255] via-transparent to-[#2e2c34]/70" />
+              <div className="trust-card-2-fade absolute inset-0" />
             </div>
           </div>
 
@@ -183,7 +183,7 @@ export default function TrustBento() {
               <span className="w-fit rounded-2xl rounded-bl-sm border border-border bg-background px-4 py-2 text-sm text-foreground/80">
                 Hey there!
               </span>
-              <span className="ml-auto w-fit rounded-2xl rounded-br-sm bg-accent px-4 py-2 text-sm font-medium text-background">
+              <span className="ml-auto w-fit rounded-2xl rounded-br-sm bg-accent px-4 py-2 text-sm font-medium text-accent-foreground">
                 How can I help you?
               </span>
             </div>

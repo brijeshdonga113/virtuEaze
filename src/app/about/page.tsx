@@ -101,7 +101,7 @@ export default function AboutPage() {
           </p>
           <Link
             href="/contact"
-            className="mt-8 inline-block rounded-full bg-accent px-8 py-3 text-sm font-medium text-background transition-opacity hover:opacity-90"
+            className="mt-8 inline-block rounded-full bg-accent px-8 py-3 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90"
           >
             Book a Demo
           </Link>

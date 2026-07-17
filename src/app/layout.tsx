@@ -4,6 +4,7 @@ import "./globals.css";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import ChromeGate from "@/components/ChromeGate";
+import { ThemeProvider, themeInitScript } from "@/components/ThemeProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,15 +31,19 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        <ChromeGate>
-          <Nav />
-        </ChromeGate>
-        <main className="flex-1">{children}</main>
-        <ChromeGate>
-          <Footer />
-        </ChromeGate>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <ThemeProvider>
+          <ChromeGate>
+            <Nav />
+          </ChromeGate>
+          <main className="flex-1">{children}</main>
+          <ChromeGate>
+            <Footer />
+          </ChromeGate>
+        </ThemeProvider>
       </body>
     </html>
   );

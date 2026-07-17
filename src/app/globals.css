@@ -6,6 +6,31 @@
   --muted: #151513;
   --border: rgba(242, 240, 234, 0.1);
   --accent: #c9a44c;
+  /* Fixed ink for text drawn on top of the (theme-invariant) accent color —
+     must never flip with theme, unlike --background. */
+  --accent-foreground: #14140f;
+
+  /* TrustBento's photo-blended bento cards were hand-tuned for the dark
+     theme. Keep their own tone stops themeable so the card chrome doesn't
+     collide with a lighter --muted in light mode. */
+  --warm-card-1-mid: #2f2820;
+  --warm-card-1-end: #4a3d33;
+  --warm-card-2-mid: #3a3040;
+  --warm-card-2-end: #534255;
+  --warm-card-2-fade-end: #2e2c34;
+}
+
+[data-theme="light"] {
+  --background: #faf8f4;
+  --foreground: #14140f;
+  --muted: #f0ece2;
+  --border: rgba(20, 20, 15, 0.1);
+
+  --warm-card-1-mid: #f2e6d2;
+  --warm-card-1-end: #ead9c2;
+  --warm-card-2-mid: #f6eef2;
+  --warm-card-2-end: #ecdfe6;
+  --warm-card-2-fade-end: #e4d7de;
 }
 
 @theme inline {
@@ -14,6 +39,7 @@
   --color-muted: var(--muted);
   --color-border: var(--border);
   --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -21,6 +47,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .eyebrow {
@@ -32,4 +59,40 @@ body {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+/* TrustBento bento-card gradients — theme-aware via the --warm-card-* vars
+   above; the photo-inset fades intentionally stay dark in both themes since
+   they scrim real photography for text legibility. */
+.trust-card-1 {
+  background-image: linear-gradient(
+    to bottom,
+    var(--muted),
+    var(--warm-card-1-mid),
+    var(--warm-card-1-end)
+  );
+}
+.trust-card-1-fade {
+  background-image: linear-gradient(
+    to bottom,
+    var(--warm-card-1-end),
+    transparent,
+    transparent
+  );
+}
+.trust-card-2 {
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--accent) 15%, transparent),
+    var(--warm-card-2-mid),
+    var(--warm-card-2-end)
+  );
+}
+.trust-card-2-fade {
+  background-image: linear-gradient(
+    to bottom,
+    var(--warm-card-2-end),
+    transparent,
+    color-mix(in srgb, var(--warm-card-2-fade-end) 70%, transparent)
+  );
 }

@@ -1,6 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
-import TwinShowcase from "@/components/TwinShowcase";
+import HeroZoom from "@/components/HeroZoom";
 import ModelViewer from "@/components/ModelViewer";
 import TrustBento from "@/components/TrustBento";
 
@@ -70,23 +69,7 @@ const DEMO_VIDEO_URL = "https://www.youtube.com/watch?v=8BGDAjvOqqU";
 export default function Home() {
   return (
     <>
-      <section className="relative h-screen min-h-[720px] w-full overflow-hidden">
-        <Image
-          src="/images/hero-showroom.jpg"
-          alt="Sales advisor presenting a digital twin of a new building on a wall touchscreen"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover"
-        />
-        {/* Subtle scrim so the transparent header stays legible over the photo. */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-background/60 to-transparent" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background to-transparent" />
-        <h1 className="sr-only">
-          Sell your property before you build it — VirtuEaze interactive 3D
-          digital twins
-        </h1>
-      </section>
+      <HeroZoom />
 
       <section className="border-b border-border">
         <div className="mx-auto max-w-7xl px-6 pb-16 pt-20 lg:px-12">
@@ -103,8 +86,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      <TwinShowcase />
 
       <TrustBento />
 
@@ -205,7 +186,7 @@ export default function Home() {
               href={CALENDLY_URL}
               target="_blank"
               rel="noreferrer"
-              className="rounded-full bg-accent px-8 py-3 text-sm font-medium text-background transition-opacity hover:opacity-90"
+              className="rounded-full bg-accent px-8 py-3 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90"
             >
               Book a Demo
             </a>
