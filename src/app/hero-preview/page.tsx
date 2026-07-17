@@ -1,5 +1,5 @@
 import Link from "next/link";
-import HeroCutout from "@/components/HeroCutout";
+import EntrySequence from "@/components/EntrySequence";
 import ModelViewer from "@/components/ModelViewer";
 import TrustBento from "@/components/TrustBento";
 
@@ -69,7 +69,7 @@ const DEMO_VIDEO_URL = "https://www.youtube.com/watch?v=8BGDAjvOqqU";
 export default function HeroPreviewPage() {
   return (
     <>
-      <HeroCutout />
+      <EntrySequence />
 
       <section className="border-b border-border">
         <div className="mx-auto max-w-7xl px-6 pb-16 pt-20 lg:px-12">
