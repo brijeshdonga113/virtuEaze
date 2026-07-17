@@ -162,7 +162,8 @@ export default function TrustBento() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#241d17]/95 via-[#241d17]/30 to-transparent" />
             <div className="relative p-8">
-              <h3 className="text-2xl font-semibold tracking-tight">
+              {/* Sits on the dark photo gradient — keep text light in both themes. */}
+              <h3 className="text-2xl font-semibold tracking-tight text-white">
                 Reliable &{" "}
                 <span className="font-light italic text-accent">
                   future-ready
