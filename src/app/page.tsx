@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import TwinShowcase from "@/components/TwinShowcase";
 import ModelViewer from "@/components/ModelViewer";
 import TrustBento from "@/components/TrustBento";
 
@@ -103,8 +102,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      <TwinShowcase />
 
       <TrustBento />
 
