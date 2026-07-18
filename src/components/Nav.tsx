@@ -106,12 +106,24 @@ function PanelItemCard({ item }: { item: PanelCard }) {
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const [activeMenu, setActiveMenu] = useState<PanelId | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileActiveMenu, setMobileActiveMenu] = useState<PanelId | null>(null);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
+    // The header doesn't stay pinned: scrolling down slides it away so the
+    // page reads full-bleed, scrolling up (or being near the top) brings it
+    // back.
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 40);
+      if (Math.abs(y - lastY) > 6) {
+        setHidden(y > 140 && y > lastY);
+        lastY = y;
+      }
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -119,6 +131,7 @@ export default function Nav() {
 
   const activePanel = getPanel(activeMenu);
   const solid = mobileOpen || scrolled;
+  const shouldHide = hidden && !mobileOpen && !activeMenu;
 
   const toggleMenu = (panelId: PanelId) =>
     setActiveMenu((current) => (current === panelId ? null : panelId));
@@ -130,7 +143,9 @@ export default function Nav() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-[transform,background-color,border-color] duration-500 ease-out ${
+        shouldHide ? "-translate-y-full" : "translate-y-0"
+      } ${
         solid
           ? "border-b border-border bg-background/70 backdrop-blur-md"
           : "border-b border-transparent bg-transparent"
