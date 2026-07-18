@@ -2,6 +2,9 @@ import Link from "next/link";
 import EntrySequence from "@/components/EntrySequence";
 import ModelViewer from "@/components/ModelViewer";
 import TrustBento from "@/components/TrustBento";
+import FadeIn from "@/components/v2/FadeIn";
+import AnimatedText from "@/components/v2/AnimatedText";
+import Magnet from "@/components/v2/Magnet";
 
 const pillars = [
   {
@@ -73,15 +76,21 @@ export default function Home() {
 
       <section className="border-b border-border">
         <div className="mx-auto max-w-7xl px-6 pb-16 pt-20 lg:px-12">
-          <span className="eyebrow text-xs uppercase text-accent">
-            Why VirtuEaze
-          </span>
+          <FadeIn>
+            <span className="eyebrow text-xs uppercase text-accent">
+              Why VirtuEaze
+            </span>
+          </FadeIn>
           <div className="mt-10 grid grid-cols-1 gap-12 sm:grid-cols-3">
-            {pillars.map((pillar) => (
-              <div key={pillar.title} className="border-t border-border pt-6">
+            {pillars.map((pillar, i) => (
+              <FadeIn
+                key={pillar.title}
+                delay={i * 0.1}
+                className="border-t border-border pt-6"
+              >
                 <h2 className="text-lg font-medium">{pillar.title}</h2>
                 <p className="mt-2 text-sm text-foreground/60">{pillar.text}</p>
-              </div>
+              </FadeIn>
             ))}
           </div>
         </div>
@@ -91,15 +100,21 @@ export default function Home() {
 
       <section className="border-t border-border">
         <div className="mx-auto max-w-7xl px-6 py-24 lg:px-12">
-          <span className="eyebrow text-xs uppercase text-accent">
-            Inside the Twin
-          </span>
-          <h2 className="mt-4 max-w-2xl text-4xl font-semibold tracking-tight sm:text-5xl">
-            Everything a buyer wants to know, one tap away.
-          </h2>
+          <FadeIn>
+            <span className="eyebrow text-xs uppercase text-accent">
+              Inside the Twin
+            </span>
+            <h2 className="mt-4 max-w-2xl text-4xl font-semibold tracking-tight sm:text-5xl">
+              Everything a buyer wants to know, one tap away.
+            </h2>
+          </FadeIn>
           <div className="mt-16 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
             {features.map((feature, i) => (
-              <div key={feature.title} className="border-t border-border pt-6">
+              <FadeIn
+                key={feature.title}
+                delay={(i % 3) * 0.1}
+                className="border-t border-border pt-6"
+              >
                 <p className="eyebrow text-xs uppercase text-foreground/40">
                   {String(i + 1).padStart(2, "0")}
                 </p>
@@ -107,7 +122,7 @@ export default function Home() {
                 <p className="mt-2 text-sm text-foreground/60">
                   {feature.text}
                 </p>
-              </div>
+              </FadeIn>
             ))}
           </div>
         </div>
@@ -115,39 +130,45 @@ export default function Home() {
 
       <section className="border-t border-border">
         <div className="mx-auto max-w-7xl px-6 py-24 lg:px-12">
-          <span className="eyebrow text-xs uppercase text-accent">
-            How It Works
-          </span>
-          <h2 className="mt-4 max-w-xl text-4xl font-semibold tracking-tight sm:text-5xl">
-            From drawings to live twin.
-          </h2>
+          <FadeIn>
+            <span className="eyebrow text-xs uppercase text-accent">
+              How It Works
+            </span>
+            <h2 className="mt-4 max-w-xl text-4xl font-semibold tracking-tight sm:text-5xl">
+              From drawings to live twin.
+            </h2>
+          </FadeIn>
           <div className="mt-16 grid grid-cols-1 gap-12 sm:grid-cols-3">
-            {processSteps.map((step) => (
-              <div key={step.step}>
+            {processSteps.map((step, i) => (
+              <FadeIn key={step.step} delay={i * 0.1}>
                 <p className="text-5xl font-light text-accent/60">
                   {step.step}
                 </p>
                 <h3 className="mt-4 text-lg font-medium">{step.title}</h3>
                 <p className="mt-2 text-sm text-foreground/60">{step.text}</p>
-              </div>
+              </FadeIn>
             ))}
           </div>
-          <p className="eyebrow mt-16 text-xs uppercase text-foreground/50">
-            Perfect for launches · Events · Meetings · International Showcases
-          </p>
+          <FadeIn>
+            <p className="eyebrow mt-16 text-xs uppercase text-foreground/50">
+              Perfect for launches · Events · Meetings · International
+              Showcases
+            </p>
+          </FadeIn>
         </div>
       </section>
 
       <section className="border-t border-border">
         <div className="mx-auto max-w-4xl px-6 py-24 text-center lg:px-12">
-          <p className="text-2xl font-light leading-relaxed text-foreground/90 sm:text-3xl">
-            &ldquo;VirtuEaze helped us explain the project clearly. Buyers
-            understood the layout, views and amenities in the first
-            meeting.&rdquo;
-          </p>
-          <p className="eyebrow mt-8 text-xs uppercase text-accent">
-            Senior Sales Executive
-          </p>
+          <AnimatedText
+            text="“VirtuEaze helped us explain the project clearly. Buyers understood the layout, views and amenities in the first meeting.”"
+            className="text-2xl font-light leading-relaxed text-foreground/90 sm:text-3xl"
+          />
+          <FadeIn>
+            <p className="eyebrow mt-8 text-xs uppercase text-accent">
+              Senior Sales Executive
+            </p>
+          </FadeIn>
         </div>
       </section>
 
@@ -155,49 +176,57 @@ export default function Home() {
 
       <section className="border-t border-border">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-8 px-6 py-24 lg:flex-row lg:items-center lg:px-12">
-          <div>
+          <FadeIn>
             <span className="eyebrow text-xs uppercase text-accent">
               Featured Projects
             </span>
             <h2 className="mt-4 max-w-xl text-4xl font-semibold tracking-tight">
               See the twin behind the tower.
             </h2>
-          </div>
-          <Link
-            href="/projects"
-            className="whitespace-nowrap rounded-full border border-border px-7 py-3 text-sm font-medium transition-colors hover:border-accent"
-          >
-            View All Projects
-          </Link>
+          </FadeIn>
+          <Magnet padding={70} strength={7} className="inline-flex">
+            <Link
+              href="/projects"
+              className="whitespace-nowrap rounded-full border border-border px-7 py-3 text-sm font-medium transition-colors hover:border-accent"
+            >
+              View All Projects
+            </Link>
+          </Magnet>
         </div>
       </section>
 
       <section className="border-t border-border">
         <div className="mx-auto max-w-7xl px-6 py-24 text-center lg:px-12">
-          <h2 className="text-4xl font-semibold tracking-tight sm:text-5xl">
-            Want to increase conversion?
-          </h2>
-          <p className="mx-auto mt-4 max-w-md text-foreground/60">
-            Sell your property before you build it — bring VirtuEaze into your
-            next launch.
-          </p>
+          <FadeIn>
+            <h2 className="text-4xl font-semibold tracking-tight sm:text-5xl">
+              Want to increase conversion?
+            </h2>
+            <p className="mx-auto mt-4 max-w-md text-foreground/60">
+              Sell your property before you build it — bring VirtuEaze into
+              your next launch.
+            </p>
+          </FadeIn>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-            <a
-              href={CALENDLY_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-full bg-accent px-8 py-3 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90"
-            >
-              Book a Demo
-            </a>
-            <a
-              href={DEMO_VIDEO_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-full border border-border px-8 py-3 text-sm font-medium transition-colors hover:border-accent"
-            >
-              Watch the Demo
-            </a>
+            <Magnet padding={70} strength={7} className="inline-flex">
+              <a
+                href={CALENDLY_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-full bg-accent px-8 py-3 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90"
+              >
+                Book a Demo
+              </a>
+            </Magnet>
+            <Magnet padding={70} strength={7} className="inline-flex">
+              <a
+                href={DEMO_VIDEO_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-full border border-border px-8 py-3 text-sm font-medium transition-colors hover:border-accent"
+              >
+                Watch the Demo
+              </a>
+            </Magnet>
           </div>
         </div>
       </section>

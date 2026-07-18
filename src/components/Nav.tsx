@@ -106,12 +106,24 @@ function PanelItemCard({ item }: { item: PanelCard }) {
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const [activeMenu, setActiveMenu] = useState<PanelId | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileActiveMenu, setMobileActiveMenu] = useState<PanelId | null>(null);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
+    // The header doesn't stay pinned: scrolling down slides it away so the
+    // page reads full-bleed, scrolling up (or being near the top) brings it
+    // back.
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 40);
+      if (Math.abs(y - lastY) > 6) {
+        setHidden(y > 140 && y > lastY);
+        lastY = y;
+      }
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -119,6 +131,10 @@ export default function Nav() {
 
   const activePanel = getPanel(activeMenu);
   const solid = mobileOpen || scrolled;
+  // Scrolling down keeps only the centered island: the logo, actions and
+  // bar chrome tuck away on desktop, and the whole bar slides off on
+  // mobile (which has no island).
+  const shouldHide = hidden && !mobileOpen && !activeMenu;
 
   const toggleMenu = (panelId: PanelId) =>
     setActiveMenu((current) => (current === panelId ? null : panelId));
@@ -130,8 +146,10 @@ export default function Nav() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${
-        solid
+      className={`fixed top-0 left-0 right-0 z-50 transition-[transform,background-color,border-color] duration-500 ease-out ${
+        shouldHide ? "max-lg:-translate-y-full" : "translate-y-0"
+      } ${
+        solid && !shouldHide
           ? "border-b border-border bg-background/70 backdrop-blur-md"
           : "border-b border-transparent bg-transparent"
       }`}
@@ -139,7 +157,9 @@ export default function Nav() {
       <nav className="relative mx-auto hidden h-16 max-w-[1600px] items-center justify-between px-5 sm:px-8 lg:flex">
         <Link
           href="/"
-          className="text-2xl font-light uppercase tracking-[0.35em]"
+          className={`text-2xl font-light uppercase tracking-[0.35em] transition-all duration-500 ease-out ${
+            shouldHide ? "pointer-events-none -translate-y-4 opacity-0" : ""
+          }`}
         >
           Virtu<span className="text-accent">Eaze</span>
         </Link>
@@ -203,7 +223,11 @@ export default function Nav() {
           </motion.div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div
+          className={`flex items-center gap-3 transition-all duration-500 ease-out ${
+            shouldHide ? "pointer-events-none -translate-y-4 opacity-0" : ""
+          }`}
+        >
           <ThemeToggle />
           <Link
             href="/contact"
