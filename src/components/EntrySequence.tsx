@@ -6,24 +6,72 @@ import Link from "next/link";
 
 const CALENDLY_URL = "https://calendly.com/virtueaze-vr/30min?back=1";
 
-const frames = [
-  { src: "/images/hero-tower-sunset.jpg", alt: "Skyline view of the tower at sunset" },
-  { src: "/images/entry-02-approach.jpg", alt: "Approaching the tower's crown" },
-  { src: "/images/entry-03-rooftop.jpg", alt: "Rooftop of the tower" },
-  { src: "/images/entry-04-cutaway.jpg", alt: "Cutaway view revealing the penthouse interior" },
-  { src: "/images/entry-05-interior.jpg", alt: "Inside the penthouse living room" },
-  { src: "/images/entry-06-floorplan.jpg", alt: "Penthouse floor plan" },
+type Frame = {
+  src: string;
+  alt: string;
+  // The first frame is the cover (hero intro), so it carries no chapter.
+  chapter?: string;
+  line?: string;
+  // Per-frame peak zoom; defaults to MAX_SCALE. The floor plan is a diagram,
+  // so it only nudges in to keep its edge labels on screen.
+  zoom?: number;
+};
+
+const frames: Frame[] = [
+  {
+    src: "/images/hero-tower-sunset.jpg",
+    alt: "Skyline view of the tower at sunset",
+  },
+  {
+    src: "/images/entry-02-approach.jpg",
+    alt: "Approaching the tower's crown",
+    chapter: "01 — Ascent",
+    line: "Rising to meet the light.",
+  },
+  {
+    src: "/images/entry-03-rooftop.jpg",
+    alt: "Rooftop of the tower",
+    chapter: "02 — The Crown",
+    line: "The city, laid at your feet.",
+  },
+  {
+    src: "/images/entry-04-cutaway.jpg",
+    alt: "Cutaway view revealing the penthouse interior",
+    chapter: "03 — The Reveal",
+    line: "Every room, opened to view.",
+  },
+  {
+    src: "/images/entry-05-interior.jpg",
+    alt: "Inside the penthouse living room",
+    chapter: "04 — The Interior",
+    line: "Step into a space not yet built.",
+  },
+  {
+    src: "/images/entry-06-floorplan.jpg",
+    alt: "Penthouse floor plan",
+    chapter: "05 — The Blueprint",
+    line: "Measured to the final detail.",
+    zoom: 1.08,
+  },
 ];
 
-const SEGMENTS = frames.length - 1;
-// How far each picture zooms in over its scroll segment (same feel as the
-// homepage hero). At the peak the next picture takes over at scale 1 and
-// keeps going — one continuous dive, and only ever one image visible.
+// Every frame gets its own scroll segment, so all six (including the closing
+// floor plan) get their moment and their caption.
+const SEGMENTS = frames.length;
+// How far each picture zooms in over its segment (same feel as the homepage
+// hero). At the peak the next picture takes over at scale 1 and keeps going —
+// one continuous dive, and only ever one image visible.
 const MAX_SCALE = 2.1;
+
+function smoothstep(a: number, b: number, x: number) {
+  const t = Math.min(Math.max((x - a) / (b - a), 0), 1);
+  return t * t * (3 - 2 * t);
+}
 
 export default function EntrySequence() {
   const sectionRef = useRef<HTMLElement>(null);
   const frameRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const captionRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [started, setStarted] = useState(false);
 
   useEffect(() => {
@@ -46,13 +94,29 @@ export default function EntrySequence() {
           // Exactly one frame is visible at a time — a hard swap at each
           // zoom peak, never a cross-fade of two images.
           if (i === active) {
+            const peak = frames[i].zoom ?? MAX_SCALE;
             el.style.opacity = "1";
             el.style.zIndex = "1";
-            el.style.transform = `scale(${1 + local * (MAX_SCALE - 1)})`;
+            el.style.transform = `scale(${1 + local * (peak - 1)})`;
           } else {
             el.style.opacity = "0";
             el.style.zIndex = "0";
             el.style.transform = "scale(1)";
+          }
+        });
+
+        // Each chapter caption eases in as its frame settles and drifts out
+        // just before the swap, so only one line is ever reading at a time.
+        captionRefs.current.forEach((el, i) => {
+          if (!el) return;
+          if (i === active) {
+            const fin = smoothstep(0.1, 0.34, local);
+            const fout = 1 - smoothstep(0.72, 0.95, local);
+            const o = Math.min(fin, fout);
+            el.style.opacity = String(o);
+            el.style.transform = `translateY(${(1 - fin) * 18}px)`;
+          } else {
+            el.style.opacity = "0";
           }
         });
 
@@ -87,13 +151,36 @@ export default function EntrySequence() {
           </div>
         ))}
 
-        {/* Legibility scrims for the header and intro text. */}
+        {/* Legibility scrims for the header and captions. */}
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-32 bg-gradient-to-b from-background/60 to-transparent" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-96 bg-gradient-to-t from-background via-background/70 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[32rem] bg-gradient-to-t from-background via-background/85 to-transparent" />
+
+        {/* Per-frame chapter captions (the cover frame has none). */}
+        {frames.map((frame, i) =>
+          frame.chapter ? (
+            <div
+              key={`cap-${frame.src}`}
+              ref={(el) => {
+                captionRefs.current[i] = el;
+              }}
+              className="pointer-events-none absolute inset-x-0 bottom-24 z-20 px-6 opacity-0 sm:bottom-28 lg:px-12"
+            >
+              <div className="mx-auto max-w-7xl">
+                <span className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.3em] text-accent">
+                  <span className="h-px w-8 bg-accent/60" />
+                  {frame.chapter}
+                </span>
+                <p className="mt-4 max-w-xl text-4xl font-semibold tracking-tight text-foreground [text-shadow:0_2px_30px_rgba(0,0,0,0.35)] sm:text-5xl md:text-6xl">
+                  {frame.line}
+                </p>
+              </div>
+            </div>
+          ) : null
+        )}
 
         <div
-          className={`absolute inset-x-0 bottom-24 z-10 px-6 transition-opacity duration-500 sm:bottom-28 lg:px-12 ${
-            started ? "opacity-0" : "opacity-100"
+          className={`absolute inset-x-0 bottom-24 z-30 px-6 transition-opacity duration-500 sm:bottom-28 lg:px-12 ${
+            started ? "pointer-events-none opacity-0" : "opacity-100"
           }`}
         >
           <div className="mx-auto max-w-7xl">
@@ -127,7 +214,7 @@ export default function EntrySequence() {
           </div>
         </div>
 
-        <div className="pointer-events-none absolute inset-x-0 top-20 z-10 px-6 text-center sm:top-28 lg:px-12">
+        <div className="pointer-events-none absolute inset-x-0 top-20 z-30 px-6 text-center sm:top-28 lg:px-12">
           <span
             className={`eyebrow text-xs uppercase text-accent transition-opacity duration-500 ${
               started ? "opacity-0" : "opacity-100"
