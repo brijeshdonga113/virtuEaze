@@ -55,9 +55,12 @@ const frames: Frame[] = [
   },
 ];
 
-// Every frame gets its own scroll segment, so all six (including the closing
-// floor plan) get their moment and their caption.
-const SEGMENTS = frames.length;
+// The skyline (frame 0) is the hero backdrop. It holds still for this slice
+// of the scroll while the intro reads, then the chapters begin directly — no
+// captionless zoom of the skyline in between.
+const HERO_HOLD = 0.12;
+// Chapters are every frame after the cover; each gets its own zoom segment.
+const CHAPTERS = frames.length - 1;
 // How far each picture zooms in over its segment (same feel as the homepage
 // hero). At the peak the next picture takes over at scale 1 and keeps going —
 // one continuous dive, and only ever one image visible.
@@ -70,6 +73,7 @@ function smoothstep(a: number, b: number, x: number) {
 
 export default function EntrySequence() {
   const sectionRef = useRef<HTMLElement>(null);
+  const heroRef = useRef<HTMLDivElement>(null);
   const frameRefs = useRef<(HTMLDivElement | null)[]>([]);
   const captionRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [started, setStarted] = useState(false);
@@ -84,16 +88,29 @@ export default function EntrySequence() {
         const progress =
           total > 0 ? Math.min(Math.max(-rect.top / total, 0), 1) : 0;
 
-        const position = progress * SEGMENTS;
-        // Which picture is on screen, and how far through its own zoom.
-        const active = Math.min(Math.floor(position), SEGMENTS - 1);
-        const local = position - active;
+        // Progress within the chapter sequence, after the hero hold.
+        const seq = Math.min(
+          Math.max((progress - HERO_HOLD) / (1 - HERO_HOLD), 0),
+          1,
+        );
+        const inSequence = progress >= HERO_HOLD;
+        const position = seq * CHAPTERS;
+        const activeChapter = Math.min(Math.floor(position), CHAPTERS - 1);
+        const local = position - activeChapter;
 
         frameRefs.current.forEach((el, i) => {
           if (!el) return;
-          // Exactly one frame is visible at a time — a hard swap at each
+          if (i === 0) {
+            // Skyline stays as the still hero backdrop underneath everything.
+            el.style.opacity = "1";
+            el.style.zIndex = "0";
+            el.style.transform = "scale(1)";
+            return;
+          }
+          // Exactly one chapter is visible at a time — a hard swap at each
           // zoom peak, never a cross-fade of two images.
-          if (i === active) {
+          const chapter = i - 1;
+          if (inSequence && chapter === activeChapter) {
             const peak = frames[i].zoom ?? MAX_SCALE;
             el.style.opacity = "1";
             el.style.zIndex = "1";
@@ -109,7 +126,8 @@ export default function EntrySequence() {
         // just before the swap, so only one line is ever reading at a time.
         captionRefs.current.forEach((el, i) => {
           if (!el) return;
-          if (i === active) {
+          const chapter = i - 1;
+          if (inSequence && chapter === activeChapter) {
             const fin = smoothstep(0.1, 0.34, local);
             const fout = 1 - smoothstep(0.72, 0.95, local);
             const o = Math.min(fin, fout);
@@ -119,6 +137,13 @@ export default function EntrySequence() {
             el.style.opacity = "0";
           }
         });
+
+        // Hero intro fades out across the hold, gone by the time chapter 1 hits.
+        if (heroRef.current) {
+          const o = 1 - smoothstep(0.015, HERO_HOLD * 0.9, progress);
+          heroRef.current.style.opacity = String(o);
+          heroRef.current.style.pointerEvents = o < 0.05 ? "none" : "auto";
+        }
 
         setStarted((prev) => prev || progress > 0.02);
       }
@@ -179,9 +204,8 @@ export default function EntrySequence() {
         )}
 
         <div
-          className={`absolute inset-x-0 bottom-24 z-30 px-6 transition-opacity duration-500 sm:bottom-28 lg:px-12 ${
-            started ? "pointer-events-none opacity-0" : "opacity-100"
-          }`}
+          ref={heroRef}
+          className="absolute inset-x-0 bottom-24 z-30 px-6 sm:bottom-28 lg:px-12"
         >
           <div className="mx-auto max-w-7xl">
             <span className="eyebrow text-xs uppercase text-accent">
