@@ -54,6 +54,44 @@ body {
   letter-spacing: 0.2em;
 }
 
+/* Entry-sequence legibility scrims. The dark theme keeps the full cinematic
+   vignette; the light theme uses a far lighter hand so the day-lit imagery
+   isn't fogged toward paper white. */
+.hero-scrim-top {
+  background: linear-gradient(
+    to bottom,
+    color-mix(in oklab, var(--background) 60%, transparent),
+    transparent
+  );
+}
+
+.hero-scrim-bottom {
+  background: linear-gradient(
+    to top,
+    var(--background) 0%,
+    color-mix(in oklab, var(--background) 85%, transparent) 50%,
+    transparent 100%
+  );
+}
+
+[data-theme="light"] .hero-scrim-top {
+  background: linear-gradient(
+    to bottom,
+    color-mix(in oklab, var(--background) 35%, transparent),
+    transparent
+  );
+}
+
+[data-theme="light"] .hero-scrim-bottom {
+  background: linear-gradient(
+    to top,
+    color-mix(in oklab, var(--background) 92%, transparent) 0%,
+    color-mix(in oklab, var(--background) 55%, transparent) 26%,
+    color-mix(in oklab, var(--background) 18%, transparent) 48%,
+    transparent 72%
+  );
+}
+
 .hero-heading {
   background: linear-gradient(180deg, #646973 0%, #bbccd7 100%);
   -webkit-background-clip: text;

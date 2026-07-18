@@ -1,11 +1,57 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { useTheme } from "@/components/ThemeProvider";
+import Magnet from "@/components/v2/Magnet";
 
 const CALENDLY_URL = "https://calendly.com/virtueaze-vr/30min?back=1";
+
+// Luxury-editorial entrance ease (fast out, long settle).
+const REVEAL_EASE = [0.22, 1, 0.36, 1] as const;
+
+// Monochrome film grain, tiled; kept below the scrims so text stays clean.
+const GRAIN_URL = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`;
+
+/** Word-by-word masked rise for the hero headline. */
+function MaskedWords({
+  text,
+  className,
+  delay = 0,
+}: {
+  text: string;
+  className?: string;
+  delay?: number;
+}) {
+  return (
+    <h1 className={className} aria-label={text}>
+      {text.split(" ").map((word, i, words) => (
+        <Fragment key={i}>
+          <span
+            aria-hidden
+            className="-mb-[0.12em] inline-block overflow-hidden pb-[0.12em] align-bottom"
+          >
+            <motion.span
+              className="inline-block will-change-transform"
+              initial={{ y: "115%" }}
+              animate={{ y: "0%" }}
+              transition={{
+                duration: 0.9,
+                delay: delay + i * 0.055,
+                ease: REVEAL_EASE,
+              }}
+            >
+              {word}
+            </motion.span>
+          </span>
+          {i < words.length - 1 ? " " : null}
+        </Fragment>
+      ))}
+    </h1>
+  );
+}
 
 type Frame = {
   // Default (dark / sunset-night) image.
@@ -235,9 +281,17 @@ export default function EntrySequence() {
           </div>
         ))}
 
-        {/* Legibility scrims for the header and captions. */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-32 bg-gradient-to-b from-background/60 to-transparent" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[32rem] bg-gradient-to-t from-background via-background/85 to-transparent" />
+        {/* Film grain over the imagery, under the scrims and text. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-[8] opacity-[0.05]"
+          style={{ backgroundImage: GRAIN_URL, backgroundSize: "160px 160px" }}
+        />
+
+        {/* Legibility scrims for the header and captions; theme-aware so the
+            light theme doesn't fog the day-lit imagery. */}
+        <div className="hero-scrim-top pointer-events-none absolute inset-x-0 top-0 z-10 h-32" />
+        <div className="hero-scrim-bottom pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[32rem]" />
 
         {/* Per-frame chapter captions (the cover frame has none). */}
         {frames.map((frame, i) =>
@@ -267,33 +321,54 @@ export default function EntrySequence() {
           className="absolute inset-x-0 bottom-24 z-30 px-6 sm:bottom-28 lg:px-12"
         >
           <div className="mx-auto max-w-7xl">
-            <span className="eyebrow text-xs uppercase text-accent">
+            <motion.span
+              className="eyebrow inline-block text-xs uppercase text-accent"
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: REVEAL_EASE }}
+            >
               Digital Twin Platform
-            </span>
-            <h1 className="mt-4 max-w-lg text-4xl font-bold tracking-tight sm:text-5xl">
-              Walk into the tower before it&apos;s built.
-            </h1>
-            <p className="mt-6 max-w-md text-foreground/70">
+            </motion.span>
+            <MaskedWords
+              text="Walk into the tower before it's built."
+              className="mt-4 max-w-lg text-4xl font-bold tracking-tight sm:text-5xl"
+              delay={0.15}
+            />
+            <motion.p
+              className="mt-6 max-w-md text-foreground/70"
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.5, ease: REVEAL_EASE }}
+            >
               Scroll to fly from the skyline into the penthouse — VirtuEaze
               turns drawings into a single continuous digital twin, from the
               rooftop down to the floor plan.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <a
-                href={CALENDLY_URL}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-full bg-accent px-8 py-3 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90"
-              >
-                Book a Demo
-              </a>
-              <Link
-                href="/projects"
-                className="rounded-full border border-border px-8 py-3 text-sm font-medium transition-colors hover:border-accent"
-              >
-                View Projects
-              </Link>
-            </div>
+            </motion.p>
+            <motion.div
+              className="mt-8 flex flex-wrap items-center gap-4"
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.65, ease: REVEAL_EASE }}
+            >
+              <Magnet padding={70} strength={7} className="inline-flex">
+                <a
+                  href={CALENDLY_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-full bg-accent px-8 py-3 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90"
+                >
+                  Book a Demo
+                </a>
+              </Magnet>
+              <Magnet padding={70} strength={7} className="inline-flex">
+                <Link
+                  href="/projects"
+                  className="rounded-full border border-border px-8 py-3 text-sm font-medium transition-colors hover:border-accent"
+                >
+                  View Projects
+                </Link>
+              </Magnet>
+            </motion.div>
           </div>
         </div>
 

@@ -3,6 +3,8 @@ import EntrySequence from "@/components/EntrySequence";
 import ModelViewer from "@/components/ModelViewer";
 import TrustBento from "@/components/TrustBento";
 import FadeIn from "@/components/v2/FadeIn";
+import AnimatedText from "@/components/v2/AnimatedText";
+import Magnet from "@/components/v2/Magnet";
 
 const pillars = [
   {
@@ -158,12 +160,11 @@ export default function Home() {
 
       <section className="border-t border-border">
         <div className="mx-auto max-w-4xl px-6 py-24 text-center lg:px-12">
+          <AnimatedText
+            text="“VirtuEaze helped us explain the project clearly. Buyers understood the layout, views and amenities in the first meeting.”"
+            className="text-2xl font-light leading-relaxed text-foreground/90 sm:text-3xl"
+          />
           <FadeIn>
-            <p className="text-2xl font-light leading-relaxed text-foreground/90 sm:text-3xl">
-              &ldquo;VirtuEaze helped us explain the project clearly. Buyers
-              understood the layout, views and amenities in the first
-              meeting.&rdquo;
-            </p>
             <p className="eyebrow mt-8 text-xs uppercase text-accent">
               Senior Sales Executive
             </p>
@@ -183,12 +184,14 @@ export default function Home() {
               See the twin behind the tower.
             </h2>
           </FadeIn>
-          <Link
-            href="/projects"
-            className="whitespace-nowrap rounded-full border border-border px-7 py-3 text-sm font-medium transition-colors hover:border-accent"
-          >
-            View All Projects
-          </Link>
+          <Magnet padding={70} strength={7} className="inline-flex">
+            <Link
+              href="/projects"
+              className="whitespace-nowrap rounded-full border border-border px-7 py-3 text-sm font-medium transition-colors hover:border-accent"
+            >
+              View All Projects
+            </Link>
+          </Magnet>
         </div>
       </section>
 
@@ -204,22 +207,26 @@ export default function Home() {
             </p>
           </FadeIn>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-            <a
-              href={CALENDLY_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-full bg-accent px-8 py-3 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90"
-            >
-              Book a Demo
-            </a>
-            <a
-              href={DEMO_VIDEO_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-full border border-border px-8 py-3 text-sm font-medium transition-colors hover:border-accent"
-            >
-              Watch the Demo
-            </a>
+            <Magnet padding={70} strength={7} className="inline-flex">
+              <a
+                href={CALENDLY_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-full bg-accent px-8 py-3 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90"
+              >
+                Book a Demo
+              </a>
+            </Magnet>
+            <Magnet padding={70} strength={7} className="inline-flex">
+              <a
+                href={DEMO_VIDEO_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-full border border-border px-8 py-3 text-sm font-medium transition-colors hover:border-accent"
+              >
+                Watch the Demo
+              </a>
+            </Magnet>
           </div>
         </div>
       </section>
