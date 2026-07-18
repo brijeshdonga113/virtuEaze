@@ -127,7 +127,7 @@ export default function ModelViewer() {
                 }}
               >
                 <div className="rounded-full border border-accent/40 bg-black/70 px-4 py-1.5 backdrop-blur-md">
-                  <p className="text-sm font-medium leading-tight">
+                  <p className="text-sm font-medium leading-tight text-white">
                     {chip.label}
                   </p>
                   <p className="eyebrow text-[9px] uppercase text-accent">

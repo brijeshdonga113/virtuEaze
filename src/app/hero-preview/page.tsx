@@ -66,7 +66,7 @@ const processSteps = [
 const CALENDLY_URL = "https://calendly.com/virtueaze-vr/30min?back=1";
 const DEMO_VIDEO_URL = "https://www.youtube.com/watch?v=8BGDAjvOqqU";
 
-export default function Home() {
+export default function HeroPreviewPage() {
   return (
     <>
       <EntrySequence />

@@ -143,7 +143,7 @@ export default function TwinShowcase() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
           </span>
-          <span className="eyebrow text-[10px] uppercase text-foreground/80">
+          <span className="eyebrow text-[10px] uppercase text-white/80">
             Live · Digital Twin
           </span>
         </div>
@@ -176,8 +176,8 @@ export default function TwinShowcase() {
                 aria-current={activeChapter === i ? "true" : undefined}
                 className={`flex items-center gap-2 rounded-full px-4 py-2 text-xs uppercase tracking-[0.12em] transition-colors ${
                   activeChapter === i
-                    ? "bg-foreground/10 text-foreground"
-                    : "text-foreground/60 hover:text-foreground"
+                    ? "bg-white/15 text-white"
+                    : "text-white/60 hover:text-white"
                 }`}
               >
                 {activeChapter === i && (
