@@ -137,6 +137,7 @@ export default function EntrySequence() {
   const { theme } = useTheme();
   const sectionRef = useRef<HTMLElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
+  const strongScrimRef = useRef<HTMLDivElement>(null);
   const frameRefs = useRef<(HTMLDivElement | null)[]>([]);
   const captionRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [started, setStarted] = useState(false);
@@ -228,6 +229,14 @@ export default function EntrySequence() {
         }
       });
 
+      // The light theme's soft vignette isn't enough for the near-white
+      // blueprint diagram — ramp the full scrim back in for that chapter.
+      if (strongScrimRef.current) {
+        strongScrimRef.current.style.opacity = String(
+          smoothstep(CHAPTERS - 1.25, CHAPTERS - 0.55, position),
+        );
+      }
+
       // Hero intro fades out across the hold, gone by the time chapter 1 hits.
       if (heroRef.current) {
         const o = 1 - smoothstep(0.015, HERO_HOLD * 0.9, progress);
@@ -292,6 +301,11 @@ export default function EntrySequence() {
             light theme doesn't fog the day-lit imagery. */}
         <div className="hero-scrim-top pointer-events-none absolute inset-x-0 top-0 z-10 h-32" />
         <div className="hero-scrim-bottom pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[32rem]" />
+        <div
+          ref={strongScrimRef}
+          className="hero-scrim-bottom-strong pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[32rem]"
+          style={{ opacity: 0 }}
+        />
 
         {/* Per-frame chapter captions (the cover frame has none). */}
         {frames.map((frame, i) =>
@@ -308,7 +322,7 @@ export default function EntrySequence() {
                   <span className="h-px w-8 bg-accent/60" />
                   {frame.chapter}
                 </span>
-                <p className="mt-4 max-w-xl text-4xl font-semibold tracking-tight text-foreground [text-shadow:0_2px_30px_rgba(0,0,0,0.35)] sm:text-5xl md:text-6xl">
+                <p className="mt-4 max-w-xl text-4xl font-semibold tracking-tight text-[#f2f0ea] [text-shadow:0_1px_3px_rgba(0,0,0,0.5),0_2px_30px_rgba(0,0,0,0.45)] sm:text-5xl md:text-6xl">
                   {frame.line}
                 </p>
               </div>
@@ -331,11 +345,11 @@ export default function EntrySequence() {
             </motion.span>
             <MaskedWords
               text="Walk into the tower before it's built."
-              className="mt-4 max-w-lg text-4xl font-bold tracking-tight sm:text-5xl"
+              className="mt-4 max-w-lg text-4xl font-bold tracking-tight text-[#f2f0ea] sm:text-5xl"
               delay={0.15}
             />
             <motion.p
-              className="mt-6 max-w-md text-foreground/70"
+              className="mt-6 max-w-md text-[#f2f0ea]/75"
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.5, ease: REVEAL_EASE }}
@@ -363,7 +377,7 @@ export default function EntrySequence() {
               <Magnet padding={70} strength={7} className="inline-flex">
                 <Link
                   href="/projects"
-                  className="rounded-full border border-border px-8 py-3 text-sm font-medium transition-colors hover:border-accent"
+                  className="rounded-full border border-[#f2f0ea]/30 px-8 py-3 text-sm font-medium text-[#f2f0ea] transition-colors hover:border-accent"
                 >
                   View Projects
                 </Link>

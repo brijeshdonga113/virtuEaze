@@ -54,41 +54,52 @@ body {
   letter-spacing: 0.2em;
 }
 
-/* Entry-sequence legibility scrims. The dark theme keeps the full cinematic
-   vignette; the light theme uses a far lighter hand so the day-lit imagery
-   isn't fogged toward paper white. */
+/* Entry-sequence legibility scrims. Always dark: over photography a white
+   wash reads as fog, a dark gradient reads as a cinematic vignette — so the
+   hero keeps dark ink in both themes (the theme swaps the imagery, not the
+   chrome). The light theme just gets a softer hand. */
 .hero-scrim-top {
-  background: linear-gradient(
-    to bottom,
-    color-mix(in oklab, var(--background) 60%, transparent),
-    transparent
-  );
+  background: linear-gradient(to bottom, rgb(10 10 10 / 0.6), transparent);
 }
 
 .hero-scrim-bottom {
   background: linear-gradient(
     to top,
-    var(--background) 0%,
-    color-mix(in oklab, var(--background) 85%, transparent) 50%,
+    rgb(10 10 10 / 1) 0%,
+    rgb(10 10 10 / 0.85) 50%,
+    transparent 100%
+  );
+}
+
+/* Light-mode-only booster: the blueprint frame is a near-white diagram, so
+   while it's active the sequence brings back the full dark vignette (scroll-
+   driven opacity). Hidden in the dark theme, whose base scrim already is
+   this gradient. */
+.hero-scrim-bottom-strong {
+  display: none;
+}
+
+[data-theme="light"] .hero-scrim-bottom-strong {
+  display: block;
+  background: linear-gradient(
+    to top,
+    rgb(10 10 10 / 1) 0%,
+    rgb(10 10 10 / 0.85) 50%,
     transparent 100%
   );
 }
 
 [data-theme="light"] .hero-scrim-top {
-  background: linear-gradient(
-    to bottom,
-    color-mix(in oklab, var(--background) 35%, transparent),
-    transparent
-  );
+  background: linear-gradient(to bottom, rgb(10 10 10 / 0.4), transparent);
 }
 
 [data-theme="light"] .hero-scrim-bottom {
   background: linear-gradient(
     to top,
-    color-mix(in oklab, var(--background) 92%, transparent) 0%,
-    color-mix(in oklab, var(--background) 55%, transparent) 26%,
-    color-mix(in oklab, var(--background) 18%, transparent) 48%,
-    transparent 72%
+    rgb(10 10 10 / 0.78) 0%,
+    rgb(10 10 10 / 0.5) 30%,
+    rgb(10 10 10 / 0.16) 58%,
+    transparent 88%
   );
 }
 
