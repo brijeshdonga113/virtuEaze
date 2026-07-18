@@ -3,11 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useTheme } from "@/components/ThemeProvider";
 
 const CALENDLY_URL = "https://calendly.com/virtueaze-vr/30min?back=1";
 
 type Frame = {
+  // Default (dark / sunset-night) image.
   src: string;
+  // Optional day-lit variant, shown in light mode. Falls back to `src`.
+  daySrc?: string;
   alt: string;
   // The first frame is the cover (hero intro), so it carries no chapter.
   chapter?: string;
@@ -72,6 +76,7 @@ function smoothstep(a: number, b: number, x: number) {
 }
 
 export default function EntrySequence() {
+  const { theme } = useTheme();
   const sectionRef = useRef<HTMLElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
   const frameRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -166,7 +171,7 @@ export default function EntrySequence() {
             style={{ opacity: i === 0 ? 1 : 0 }}
           >
             <Image
-              src={frame.src}
+              src={theme === "light" && frame.daySrc ? frame.daySrc : frame.src}
               alt={frame.alt}
               fill
               priority={i === 0}
