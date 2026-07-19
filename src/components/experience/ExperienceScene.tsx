@@ -20,6 +20,10 @@ const TOWER_GLB_URL = "/models/tower.glb";
 // Shared, mutated once per frame by the DOM scroll rig in LuxuryExperience.
 export type MotionState = { p: number };
 
+// Camera fit for the close beats — 1 for the procedural envelope; the GLB
+// loader lowers it for slimmer models so they still fill the frame.
+const fitState = { value: 1 };
+
 const FLOORS = 24;
 const FLOOR_H = 1.15;
 const TOWER_W = 10;
@@ -81,6 +85,15 @@ function CameraRig({ motion }: { motion: React.MutableRefObject<MotionState> }) 
     const intro = introRaw * introRaw * (3 - 2 * introRaw);
 
     poseAt(motion.current.p, goalPos, goalLook);
+    // Slim GLB towers: pull in during the residence/x-ray beats so the
+    // building still fills the frame.
+    const fit = fitState.value;
+    if (fit < 1) {
+      const p = motion.current.p;
+      const closeness =
+        smoothstep(0.42, 0.55, p) * (1 - smoothstep(0.78, 0.88, p));
+      goalPos.lerp(goalLook, (1 - fit) * 0.5 * closeness);
+    }
     goalPos.lerpVectors(INTRO_POS, goalPos, intro);
     goalLook.lerpVectors(INTRO_LOOK, goalLook, intro);
 
@@ -372,7 +385,11 @@ function GlbTower({
   motion: React.MutableRefObject<MotionState>;
 }) {
   const { scene } = useGLTF(TOWER_GLB_URL);
+  // Materials named like "Walls" fade for the x-ray beat; everything else
+  // (windows, structure) stays. Models without named walls fade wholesale.
+  const wallMats = useRef<THREE.Material[]>([]);
   const matsRef = useRef<THREE.Material[]>([]);
+  const bandRef = useRef<THREE.Mesh>(null);
   const object = useMemo(() => {
     const m = scene.clone(true);
     const box = new THREE.Box3().setFromObject(m);
@@ -397,7 +414,10 @@ function GlbTower({
   useFrame(() => {
     const t = smoothstep(0.62, 0.8, motion.current.p);
     const opacity = 1 - t * 0.72;
-    for (const mm of matsRef.current) {
+    const targets = wallMats.current.length
+      ? wallMats.current
+      : matsRef.current;
+    for (const mm of targets) {
       mm.transparent = opacity < 0.999;
       mm.opacity = opacity;
       mm.depthWrite = opacity > 0.6;
@@ -411,18 +431,48 @@ function GlbTower({
         ref={(node: THREE.Object3D | null) => {
           if (!node) return;
           const mats: THREE.Material[] = [];
+          const walls: THREE.Material[] = [];
           node.traverse((o) => {
             if (o instanceof THREE.Mesh) {
               (Array.isArray(o.material) ? o.material : [o.material]).forEach(
-                (mm: THREE.Material) => mats.push(mm),
+                (mm: THREE.Material) => {
+                  mats.push(mm);
+                  if (/wall/i.test(mm.name)) walls.push(mm);
+                  // Untextured window materials often ship saturated flat
+                  // colors — warm them to the dusk palette instead.
+                  if (
+                    /window|glass/i.test(mm.name) &&
+                    mm instanceof THREE.MeshStandardMaterial &&
+                    !mm.map
+                  ) {
+                    mm.color.set("#e9d3ac");
+                    mm.emissive.set("#dfa96e");
+                    mm.emissiveIntensity = 0.45;
+                    mm.metalness = 0.4;
+                    mm.roughness = 0.25;
+                  }
+                },
               );
             }
           });
           matsRef.current = mats;
+          wallMats.current = walls;
+
+          // Adapt the shared rig to the model's real footprint: pull the
+          // camera in on close beats and shrink the glow band to hug it.
+          const box = new THREE.Box3().setFromObject(node);
+          const size = box.getSize(new THREE.Vector3());
+          const footprint = Math.max(size.x, size.z);
+          fitState.value = Math.min(Math.max(footprint / TOWER_W, 0.4), 1);
+          if (bandRef.current) {
+            const s = (footprint + 0.25) / (TOWER_W + 0.18);
+            bandRef.current.scale.set(s, 1, s);
+          }
         }}
       />
-      {/* Focus-floor glow still marks the selected residence. */}
-      <mesh position={[0, FOCUS_Y, 0]}>
+      {/* Focus-floor glow still marks the selected residence; rescaled to
+          the model's footprint once it loads. */}
+      <mesh ref={bandRef} position={[0, FOCUS_Y, 0]}>
         <boxGeometry args={[TOWER_W + 0.18, FLOOR_H - 0.18, TOWER_D + 0.18]} />
         <meshStandardMaterial
           color="#f3e2c4"
@@ -461,7 +511,12 @@ function TowerSwitch({
     let alive = true;
     fetch(TOWER_GLB_URL, { method: "HEAD" })
       .then((r) => {
-        if (alive && r.ok) setHasGlb(true);
+        if (alive && r.ok) {
+          // Kick the download immediately so the swap from the procedural
+          // stand-in happens during the intro push, not mid-scroll.
+          useGLTF.preload(TOWER_GLB_URL);
+          setHasGlb(true);
+        }
       })
       .catch(() => {});
     return () => {
