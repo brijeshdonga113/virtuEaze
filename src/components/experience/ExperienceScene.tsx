@@ -10,7 +10,13 @@ import {
   type ReactNode,
 } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Environment, Lightformer, useGLTF } from "@react-three/drei";
+import {
+  ContactShadows,
+  Environment,
+  Lightformer,
+  useGLTF,
+} from "@react-three/drei";
+import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
 
 // Drop a real building model here (GLB, Draco or plain) and it replaces the
@@ -390,6 +396,8 @@ function GlbTower({
   const wallMats = useRef<THREE.Material[]>([]);
   const matsRef = useRef<THREE.Material[]>([]);
   const bandRef = useRef<THREE.Mesh>(null);
+  const footprintRef = useRef<number | null>(null);
+  const bandFitted = useRef(false);
   const object = useMemo(() => {
     const m = scene.clone(true);
     const box = new THREE.Box3().setFromObject(m);
@@ -412,6 +420,18 @@ function GlbTower({
   }, [scene]);
 
   useFrame(() => {
+    // The band can only be sized once both the model (for its footprint)
+    // and the band mesh are mounted — ref order makes this the safe spot.
+    if (
+      !bandFitted.current &&
+      footprintRef.current !== null &&
+      bandRef.current
+    ) {
+      const s = (footprintRef.current + 0.25) / (TOWER_W + 0.18);
+      bandRef.current.scale.set(s, Math.max(s, 0.5), s);
+      bandFitted.current = true;
+    }
+
     const t = smoothstep(0.62, 0.8, motion.current.p);
     const opacity = 1 - t * 0.72;
     const targets = wallMats.current.length
@@ -450,6 +470,12 @@ function GlbTower({
                     mm.emissiveIntensity = 0.45;
                     mm.metalness = 0.4;
                     mm.roughness = 0.25;
+                  } else if (mm instanceof THREE.MeshStandardMaterial) {
+                    // Baked textures ship fully rough — give them speculars
+                    // without drowning the texture in warm reflections.
+                    mm.roughness = Math.min(mm.roughness, 0.7);
+                    mm.metalness = Math.max(mm.metalness, 0.08);
+                    mm.envMapIntensity = 1.15;
                   }
                 },
               );
@@ -464,10 +490,7 @@ function GlbTower({
           const size = box.getSize(new THREE.Vector3());
           const footprint = Math.max(size.x, size.z);
           fitState.value = Math.min(Math.max(footprint / TOWER_W, 0.4), 1);
-          if (bandRef.current) {
-            const s = (footprint + 0.25) / (TOWER_W + 0.18);
-            bandRef.current.scale.set(s, 1, s);
-          }
+          footprintRef.current = footprint;
         }}
       />
       {/* Focus-floor glow still marks the selected residence; rescaled to
@@ -477,9 +500,9 @@ function GlbTower({
         <meshStandardMaterial
           color="#f3e2c4"
           emissive="#ffc98a"
-          emissiveIntensity={1.4}
+          emissiveIntensity={0.9}
           transparent
-          opacity={0.35}
+          opacity={0.25}
         />
       </mesh>
     </group>
@@ -774,21 +797,40 @@ export default function ExperienceScene({
       dpr={[1, 1.75]}
       camera={{ fov: 42, near: 0.5, far: 900, position: [64, 10, 88] }}
       gl={{ antialias: true }}
+      onCreated={({ gl }) => {
+        gl.toneMappingExposure = 1.12;
+      }}
     >
       <fog attach="fog" args={["#ecdfcd", 60, 300]} />
-      <hemisphereLight args={["#f6e8d6", "#b8b2a4", 0.75]} />
-      <ambientLight intensity={0.16} />
+      <hemisphereLight args={["#f6e8d6", "#b8b2a4", 0.7]} />
+      <ambientLight intensity={0.14} />
+      {/* Warm sunset key with crisper shadows */}
       <directionalLight
         position={[95, 34, 42]}
-        intensity={2}
+        intensity={2.4}
         color="#ffc98f"
         castShadow
-        shadow-mapSize={[1024, 1024]}
+        shadow-mapSize={[2048, 2048]}
+        shadow-bias={-0.0002}
         shadow-camera-left={-70}
         shadow-camera-right={70}
         shadow-camera-top={70}
         shadow-camera-bottom={-70}
         shadow-camera-far={260}
+      />
+      {/* Cool rim from the shadow side separates the tower from the sky */}
+      <directionalLight
+        position={[-70, 32, -55]}
+        intensity={0.85}
+        color="#dfe4f5"
+      />
+      {/* Architectural uplight washing the podium */}
+      <pointLight
+        position={[9, 2.5, 11]}
+        intensity={22}
+        distance={45}
+        decay={2}
+        color="#ffb677"
       />
 
       {/* Procedural sunset reflections for the glass — fully offline. */}
@@ -822,7 +864,32 @@ export default function ExperienceScene({
         <meshStandardMaterial color="#e7e4db" roughness={1} />
       </mesh>
 
+      {/* Soft grounding under the tower; keeps re-baking through the GLB
+          swap window, then freezes. */}
+      <ContactShadows
+        position={[0, 0.04, 0]}
+        scale={55}
+        far={32}
+        blur={2.2}
+        opacity={0.42}
+        resolution={512}
+        frames={240}
+        color="#4a4238"
+      />
+
       <CameraRig motion={motion} />
+
+      <EffectComposer multisampling={4}>
+        {/* Threshold sits above the sky horizon so only emissive windows
+            and gold accents bloom — never the sky band. */}
+        <Bloom
+          mipmapBlur
+          intensity={0.3}
+          luminanceThreshold={0.92}
+          luminanceSmoothing={0.14}
+        />
+        <Vignette eskil={false} offset={0.22} darkness={0.32} />
+      </EffectComposer>
     </Canvas>
   );
 }
