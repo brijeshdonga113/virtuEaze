@@ -667,7 +667,8 @@ type CityItem = {
 };
 
 // Deterministic city massing shared by the blocks and their lit windows.
-function makeCityData(): CityItem[] {
+function makeCityData(day = false): CityItem[] {
+  const base = day ? "#b4bac1" : "#575049";
   const rng = (() => {
     let s = 1337;
     return () => {
@@ -695,7 +696,7 @@ function makeCityData(): CityItem[] {
     scale.set(w, h, d);
     items.push({
       m: m.clone().compose(posV, q, scale),
-      c: new THREE.Color("#575049").offsetHSL(0, 0, (rng() - 0.5) * 0.06),
+      c: new THREE.Color(base).offsetHSL(0, 0, (rng() - 0.5) * 0.06),
       x,
       z,
       w,
@@ -707,12 +708,13 @@ function makeCityData(): CityItem[] {
   return items;
 }
 
-function City() {
+function City({ day = false }: { day?: boolean }) {
   const ref = useRef<THREE.InstancedMesh>(null);
-  const data = useMemo(() => makeCityData(), []);
+  const data = useMemo(() => makeCityData(day), [day]);
 
   return (
     <instancedMesh
+      key={day ? "day" : "dusk"}
       ref={(node) => {
         ref.current = node;
         if (!node) return;
@@ -727,7 +729,7 @@ function City() {
       castShadow
     >
       <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color="#575049" roughness={0.95} />
+      <meshStandardMaterial color={day ? "#b4bac1" : "#575049"} roughness={0.95} />
     </instancedMesh>
   );
 }
@@ -788,7 +790,7 @@ function CityLights() {
   );
 }
 
-function Trees() {
+function Trees({ day = false }: { day?: boolean }) {
   const COUNT = 110;
   const data = useMemo(() => {
     const rng = (() => {
@@ -829,12 +831,12 @@ function Trees() {
       args={[undefined, undefined, data.length]}
     >
       <sphereGeometry args={[1, 8, 6]} />
-      <meshStandardMaterial color="#41523e" roughness={1} />
+      <meshStandardMaterial color={day ? "#6c7f57" : "#41523e"} roughness={1} />
     </instancedMesh>
   );
 }
 
-function Mountains() {
+function Mountains({ day = false }: { day?: boolean }) {
   const cones = useMemo(() => {
     const rng = (() => {
       let s = 99;
@@ -858,7 +860,11 @@ function Mountains() {
       {cones.map((c, i) => (
         <mesh key={i} position={c.pos}>
           <coneGeometry args={[c.w, c.h, 5]} />
-          <meshStandardMaterial color="#3d4351" roughness={1} flatShading />
+          <meshStandardMaterial
+            color={day ? "#9aa7b6" : "#3d4351"}
+            roughness={1}
+            flatShading
+          />
         </mesh>
       ))}
     </>
@@ -979,16 +985,17 @@ function SkyDome() {
   );
 }
 
-function Roads() {
+function Roads({ day = false }: { day?: boolean }) {
+  const road = day ? "#7c828a" : "#1e2126";
   return (
     <group position={[0, 0.03, 0]}>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 12]}>
         <planeGeometry args={[300, 6.5]} />
-        <meshStandardMaterial color="#1e2126" roughness={0.95} />
+        <meshStandardMaterial color={road} roughness={0.95} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, Math.PI / 2]} position={[-12, 0, 0]}>
         <planeGeometry args={[300, 6.5]} />
-        <meshStandardMaterial color="#1e2126" roughness={0.95} />
+        <meshStandardMaterial color={road} roughness={0.95} />
       </mesh>
     </group>
   );
@@ -1072,6 +1079,9 @@ export default function ExperienceScene({
   // procedural gradient dome.
   const hasHdri = useAssetPresent(SKY_HDRI_URL);
   const hasSkyImage = useAssetPresent(SKY_IMAGE_URL);
+  // A flat daytime photo needs a daytime foreground to match; the HDRI
+  // carries its own mood, so it keeps the dusk grade.
+  const day = hasSkyImage && !hasHdri;
 
   return (
     <Canvas
@@ -1084,18 +1094,23 @@ export default function ExperienceScene({
       }}
     >
       {/* Fog tuned to the active sky so the horizon blends: dusk mauve for
-          the procedural/HDRI dusk, cool haze under a flat daytime photo. */}
+          the procedural/HDRI dusk; a brighter cool haze under a daytime photo
+          that starts nearer so the low-poly city dissolves into mist. */}
       <fog
         attach="fog"
-        args={[hasSkyImage && !hasHdri ? "#aebccb" : "#6e5a58", 45, 270]}
+        args={day ? ["#c3d0dc", 28, 240] : ["#6e5a58", 45, 270]}
       />
-      <hemisphereLight args={["#e0a06a", "#2e2a28", 0.55]} />
-      <ambientLight intensity={0.12} />
-      {/* Warm sunset key with crisper shadows */}
+      <hemisphereLight
+        args={
+          day ? ["#cfe1f2", "#7c7a74", 0.95] : ["#e0a06a", "#2e2a28", 0.55]
+        }
+      />
+      <ambientLight intensity={day ? 0.32 : 0.12} />
+      {/* Key light: neutral daylight under a day sky, warm sun at dusk */}
       <directionalLight
         position={[95, 34, 42]}
-        intensity={2.2}
-        color="#ff9d5c"
+        intensity={day ? 2.6 : 2.2}
+        color={day ? "#fff4e2" : "#ff9d5c"}
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0002}
@@ -1108,8 +1123,8 @@ export default function ExperienceScene({
       {/* Cool rim from the shadow side separates the tower from the sky */}
       <directionalLight
         position={[-70, 32, -55]}
-        intensity={0.9}
-        color="#7183b0"
+        intensity={day ? 0.6 : 0.9}
+        color={day ? "#aecbe6" : "#7183b0"}
       />
       {/* Architectural uplight washing the podium */}
       <pointLight
@@ -1156,17 +1171,17 @@ export default function ExperienceScene({
         </>
       )}
       <Particles />
-      <Mountains />
-      <City />
-      <CityLights />
-      <Trees />
-      <Roads />
+      <Mountains day={day} />
+      <City day={day} />
+      {!day && <CityLights />}
+      <Trees day={day} />
+      <Roads day={day} />
       <TowerSwitch motion={motion} />
 
       {/* Ground */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <circleGeometry args={[320, 48]} />
-        <meshStandardMaterial color="#33302c" roughness={1} />
+        <meshStandardMaterial color={day ? "#c7ccd1" : "#33302c"} roughness={1} />
       </mesh>
 
       {/* Soft grounding under the tower; keeps re-baking through the GLB
@@ -1193,7 +1208,7 @@ export default function ExperienceScene({
           luminanceThreshold={0.85}
           luminanceSmoothing={0.14}
         />
-        <Vignette eskil={false} offset={0.22} darkness={0.42} />
+        <Vignette eskil={false} offset={0.25} darkness={day ? 0.26 : 0.42} />
       </EffectComposer>
     </Canvas>
   );
