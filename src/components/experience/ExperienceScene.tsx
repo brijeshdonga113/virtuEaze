@@ -1,9 +1,21 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import {
+  Component,
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Environment, Lightformer } from "@react-three/drei";
+import { Environment, Lightformer, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
+
+// Drop a real building model here (GLB, Draco or plain) and it replaces the
+// procedural tower automatically — the camera choreography stays identical.
+const TOWER_GLB_URL = "/models/tower.glb";
 
 // Shared, mutated once per frame by the DOM scroll rig in LuxuryExperience.
 export type MotionState = { p: number };
@@ -83,6 +95,12 @@ function CameraRig({ motion }: { motion: React.MutableRefObject<MotionState> }) 
   return null;
 }
 
+// Podium occupies the first two levels, wider than the tower shaft —
+// mirroring the real Tremont massing.
+const PODIUM_LEVELS = 2;
+const PODIUM_TOP = PODIUM_LEVELS * FLOOR_H;
+const SHAFT_H = TOWER_H - PODIUM_TOP;
+
 function Tower({ motion }: { motion: React.MutableRefObject<MotionState> }) {
   const facade = useRef<THREE.MeshPhysicalMaterial>(null);
   const focusGlow = useRef<THREE.MeshStandardMaterial>(null);
@@ -90,10 +108,49 @@ function Tower({ motion }: { motion: React.MutableRefObject<MotionState> }) {
   const slabs = useMemo(() => {
     const m = new THREE.Matrix4();
     const list: THREE.Matrix4[] = [];
-    for (let i = 0; i <= FLOORS; i++) {
+    for (let i = PODIUM_LEVELS; i <= FLOORS; i++) {
       list.push(m.clone().setPosition(0, i * FLOOR_H, 0));
     }
     return list;
+  }, []);
+
+  // The real facade's signature: cream ribbons that wave down the glass.
+  const waves = useMemo(() => {
+    const items: { pos: [number, number, number]; face: "x" | "z" }[] = [];
+    const anchors = [-2.3, 2.3];
+    for (let f = PODIUM_LEVELS; f < FLOORS; f++) {
+      const y = f * FLOOR_H + FLOOR_H / 2;
+      anchors.forEach((anchor, a) => {
+        const sway =
+          Math.sin((f / FLOORS) * Math.PI * 2 + a * 1.7) * 0.95;
+        items.push({ pos: [anchor + sway, y, TOWER_D / 2 + 0.16], face: "z" });
+        items.push({
+          pos: [anchor - sway, y, -(TOWER_D / 2 + 0.16)],
+          face: "z",
+        });
+        items.push({ pos: [TOWER_W / 2 + 0.16, y, anchor - sway], face: "x" });
+        items.push({
+          pos: [-(TOWER_W / 2 + 0.16), y, anchor + sway],
+          face: "x",
+        });
+      });
+    }
+    return items;
+  }, []);
+
+  // Dense vertical mullions — the ribbed curtain-wall read.
+  const ribs = useMemo(() => {
+    const items: { pos: [number, number, number]; face: "x" | "z" }[] = [];
+    const count = 14;
+    for (let i = 0; i < count; i++) {
+      const along = (i / (count - 1) - 0.5) * (TOWER_W - 1.2);
+      const y = PODIUM_TOP + SHAFT_H / 2;
+      items.push({ pos: [along, y, TOWER_D / 2 + 0.06], face: "z" });
+      items.push({ pos: [along, y, -(TOWER_D / 2 + 0.06)], face: "z" });
+      items.push({ pos: [TOWER_W / 2 + 0.06, y, along], face: "x" });
+      items.push({ pos: [-(TOWER_W / 2 + 0.06), y, along], face: "x" });
+    }
+    return items;
   }, []);
 
   // Warm lit windows scattered across the facade — dusk occupancy.
@@ -115,7 +172,7 @@ function Tower({ motion }: { motion: React.MutableRefObject<MotionState> }) {
       { rot: -Math.PI / 2, axis: "z" as const, offset: -(TOWER_W / 2 + 0.06) },
     ];
     for (const face of faces) {
-      for (let f = 1; f < FLOORS; f++) {
+      for (let f = PODIUM_LEVELS + 1; f < FLOORS; f++) {
         for (let c = 0; c < cols; c++) {
           if (rand() > 0.28) continue;
           const along = (c / (cols - 1) - 0.5) * (TOWER_W - 2.4);
@@ -146,12 +203,15 @@ function Tower({ motion }: { motion: React.MutableRefObject<MotionState> }) {
 
   return (
     <group>
-      {/* Glass envelope */}
-      <mesh position={[0, TOWER_H / 2, 0]} renderOrder={2}>
-        <boxGeometry args={[TOWER_W, TOWER_H, TOWER_D]} />
+      {/* Glass shaft above the podium */}
+      <mesh
+        position={[0, PODIUM_TOP + SHAFT_H / 2, 0]}
+        renderOrder={2}
+      >
+        <boxGeometry args={[TOWER_W, SHAFT_H, TOWER_D]} />
         <meshPhysicalMaterial
           ref={facade}
-          color="#9db6c6"
+          color="#8ea9bd"
           metalness={0.35}
           roughness={0.08}
           transparent
@@ -161,11 +221,49 @@ function Tower({ motion }: { motion: React.MutableRefObject<MotionState> }) {
         />
       </mesh>
 
+      {/* Charcoal recessed bays behind the ribs */}
+      {[TOWER_D / 2 + 0.02, -(TOWER_D / 2 + 0.02)].map((z, i) => (
+        <mesh key={`bz-${i}`} position={[0, PODIUM_TOP + SHAFT_H / 2, z]}>
+          <boxGeometry args={[3.1, SHAFT_H, 0.05]} />
+          <meshStandardMaterial color="#2e3238" roughness={0.6} metalness={0.3} />
+        </mesh>
+      ))}
+      {[TOWER_W / 2 + 0.02, -(TOWER_W / 2 + 0.02)].map((x, i) => (
+        <mesh key={`bx-${i}`} position={[x, PODIUM_TOP + SHAFT_H / 2, 0]}>
+          <boxGeometry args={[0.05, SHAFT_H, 3.1]} />
+          <meshStandardMaterial color="#2e3238" roughness={0.6} metalness={0.3} />
+        </mesh>
+      ))}
+
+      {/* Vertical mullion ribs */}
+      {ribs.map((r, i) => (
+        <mesh key={`rib-${i}`} position={r.pos}>
+          <boxGeometry
+            args={r.face === "z" ? [0.07, SHAFT_H, 0.09] : [0.09, SHAFT_H, 0.07]}
+          />
+          <meshStandardMaterial color="#e8dfc9" roughness={0.55} />
+        </mesh>
+      ))}
+
+      {/* Flowing cream ribbons */}
+      {waves.map((w, i) => (
+        <mesh key={`wave-${i}`} position={w.pos}>
+          <boxGeometry
+            args={
+              w.face === "z"
+                ? [1.05, FLOOR_H + 0.02, 0.3]
+                : [0.3, FLOOR_H + 0.02, 1.05]
+            }
+          />
+          <meshStandardMaterial color="#ece2cc" roughness={0.5} />
+        </mesh>
+      ))}
+
       {/* Floor slabs */}
       {slabs.map((m, i) => (
         <mesh
           key={i}
-          position={[0, i * FLOOR_H, 0]}
+          position={[0, (i + PODIUM_LEVELS) * FLOOR_H, 0]}
           castShadow={i % 3 === 0}
         >
           <boxGeometry args={[TOWER_W + 0.35, 0.14, TOWER_D + 0.35]} />
@@ -179,20 +277,20 @@ function Tower({ motion }: { motion: React.MutableRefObject<MotionState> }) {
         <meshStandardMaterial color="#b7b1a5" roughness={0.85} />
       </mesh>
 
-      {/* Corner columns */}
+      {/* Champagne corner blades */}
       {[
         [TOWER_W / 2, TOWER_D / 2],
         [-TOWER_W / 2, TOWER_D / 2],
         [TOWER_W / 2, -TOWER_D / 2],
         [-TOWER_W / 2, -TOWER_D / 2],
       ].map(([x, z], i) => (
-        <mesh key={i} position={[x, TOWER_H / 2, z]}>
-          <boxGeometry args={[0.4, TOWER_H, 0.4]} />
-          <meshStandardMaterial color="#2c3440" metalness={0.6} roughness={0.35} />
+        <mesh key={i} position={[x, PODIUM_TOP + SHAFT_H / 2, z]}>
+          <boxGeometry args={[0.55, SHAFT_H, 0.55]} />
+          <meshStandardMaterial color="#e3d9c2" roughness={0.55} />
         </mesh>
       ))}
 
-      {/* Gold parapet trim */}
+      {/* Gold crown edge lighting */}
       <mesh position={[0, TOWER_H + 0.12, 0]}>
         <boxGeometry args={[TOWER_W + 0.5, 0.1, TOWER_D + 0.5]} />
         <meshStandardMaterial
@@ -200,8 +298,41 @@ function Tower({ motion }: { motion: React.MutableRefObject<MotionState> }) {
           metalness={0.8}
           roughness={0.3}
           emissive="#C8A86B"
-          emissiveIntensity={0.12}
+          emissiveIntensity={0.35}
         />
+      </mesh>
+      {[
+        [TOWER_W / 2, TOWER_D / 2],
+        [-TOWER_W / 2, TOWER_D / 2],
+        [TOWER_W / 2, -TOWER_D / 2],
+        [-TOWER_W / 2, -TOWER_D / 2],
+      ].map(([x, z], i) => (
+        <mesh key={`gl-${i}`} position={[x, TOWER_H - FLOOR_H * 1.5, z]}>
+          <boxGeometry args={[0.12, FLOOR_H * 3, 0.12]} />
+          <meshStandardMaterial
+            color="#C8A86B"
+            emissive="#e9b96b"
+            emissiveIntensity={0.9}
+          />
+        </mesh>
+      ))}
+
+      {/* Podium with dark storefront glazing and plaza */}
+      <mesh position={[0, PODIUM_TOP / 2, 0]} castShadow>
+        <boxGeometry args={[14, PODIUM_TOP, 14]} />
+        <meshStandardMaterial color="#e3d9c2" roughness={0.7} />
+      </mesh>
+      <mesh position={[0, FLOOR_H * 0.55, 0]}>
+        <boxGeometry args={[14.12, FLOOR_H, 14.12]} />
+        <meshStandardMaterial
+          color="#2b3138"
+          metalness={0.5}
+          roughness={0.25}
+        />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
+        <circleGeometry args={[20, 40]} />
+        <meshStandardMaterial color="#eae6dc" roughness={1} />
       </mesh>
 
       {/* Focus apartment: warm lit volume that pokes just past the glass so
@@ -230,6 +361,121 @@ function Tower({ motion }: { motion: React.MutableRefObject<MotionState> }) {
         </mesh>
       ))}
     </group>
+  );
+}
+
+/** Real building model, auto-fitted into the procedural tower's envelope so
+    the camera timeline needs no retuning. Walls still fade at 70%. */
+function GlbTower({
+  motion,
+}: {
+  motion: React.MutableRefObject<MotionState>;
+}) {
+  const { scene } = useGLTF(TOWER_GLB_URL);
+  const matsRef = useRef<THREE.Material[]>([]);
+  const object = useMemo(() => {
+    const m = scene.clone(true);
+    const box = new THREE.Box3().setFromObject(m);
+    const size = box.getSize(new THREE.Vector3());
+    const scale = TOWER_H / (size.y || 1);
+    m.scale.setScalar(scale);
+    box.setFromObject(m);
+    const center = box.getCenter(new THREE.Vector3());
+    m.position.set(-center.x, -box.min.y, -center.z);
+    m.traverse((o) => {
+      if (o instanceof THREE.Mesh) {
+        o.castShadow = true;
+        const cloned = (
+          Array.isArray(o.material) ? o.material : [o.material]
+        ).map((mm: THREE.Material) => mm.clone());
+        o.material = Array.isArray(o.material) ? cloned : cloned[0];
+      }
+    });
+    return m;
+  }, [scene]);
+
+  useFrame(() => {
+    const t = smoothstep(0.62, 0.8, motion.current.p);
+    const opacity = 1 - t * 0.72;
+    for (const mm of matsRef.current) {
+      mm.transparent = opacity < 0.999;
+      mm.opacity = opacity;
+      mm.depthWrite = opacity > 0.6;
+    }
+  });
+
+  return (
+    <group>
+      <primitive
+        object={object}
+        ref={(node: THREE.Object3D | null) => {
+          if (!node) return;
+          const mats: THREE.Material[] = [];
+          node.traverse((o) => {
+            if (o instanceof THREE.Mesh) {
+              (Array.isArray(o.material) ? o.material : [o.material]).forEach(
+                (mm: THREE.Material) => mats.push(mm),
+              );
+            }
+          });
+          matsRef.current = mats;
+        }}
+      />
+      {/* Focus-floor glow still marks the selected residence. */}
+      <mesh position={[0, FOCUS_Y, 0]}>
+        <boxGeometry args={[TOWER_W + 0.18, FLOOR_H - 0.18, TOWER_D + 0.18]} />
+        <meshStandardMaterial
+          color="#f3e2c4"
+          emissive="#ffc98a"
+          emissiveIntensity={1.4}
+          transparent
+          opacity={0.35}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+class GlbBoundary extends Component<
+  { fallback: ReactNode; children: ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
+
+/** Uses the real GLB when it exists in public/models, else the procedural
+    Tremont-styled tower. */
+function TowerSwitch({
+  motion,
+}: {
+  motion: React.MutableRefObject<MotionState>;
+}) {
+  const [hasGlb, setHasGlb] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    fetch(TOWER_GLB_URL, { method: "HEAD" })
+      .then((r) => {
+        if (alive && r.ok) setHasGlb(true);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  if (!hasGlb) return <Tower motion={motion} />;
+  return (
+    <GlbBoundary fallback={<Tower motion={motion} />}>
+      <Suspense fallback={<Tower motion={motion} />}>
+        <GlbTower motion={motion} />
+      </Suspense>
+    </GlbBoundary>
   );
 }
 
@@ -513,7 +759,7 @@ export default function ExperienceScene({
       <City />
       <Trees />
       <Roads />
-      <Tower motion={motion} />
+      <TowerSwitch motion={motion} />
 
       {/* Ground */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
