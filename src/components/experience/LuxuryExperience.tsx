@@ -374,6 +374,34 @@ export default function LuxuryExperience() {
         </div>
       )}
 
+      {/* TEMP video preview — a plain looping clip to see how a video reads
+          in the flow. Replace public/videos/showcase-temp.mp4 with the real
+          render later (this stand-in is a competitor showcase, not for ship). */}
+      <section className="relative h-screen w-full overflow-hidden bg-[#0a0a0a]">
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          poster="/images/hero-tower-sunset.jpg"
+          className="absolute inset-0 h-full w-full object-cover"
+        >
+          <source src="/videos/showcase-temp.mp4" type="video/mp4" />
+        </video>
+        <div className="hero-scrim-bottom pointer-events-none absolute inset-x-0 bottom-0 h-96" />
+        <div className="absolute inset-x-0 bottom-20 z-10 px-6 sm:bottom-24 lg:px-12">
+          <div className="mx-auto max-w-7xl">
+            <span className="eyebrow flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-[#c9a44c]">
+              <span className="h-px w-8 bg-[#c9a44c]/60" />
+              Cinematic Walkthrough
+            </span>
+            <p className="mt-4 max-w-xl text-4xl font-semibold tracking-tight text-[#f2f0ea] [text-shadow:0_1px_3px_rgba(0,0,0,0.5)] sm:text-5xl">
+              See the twin in motion.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Below-the-fold content in the homepage's exact styling. */}
       <div id="experience-end" className="bg-background text-foreground">
         <section className="border-b border-border">
