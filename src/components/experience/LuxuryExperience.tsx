@@ -13,6 +13,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import FloorPlanSvg from "@/components/FloorPlanSvg";
+import FadeIn from "@/components/v2/FadeIn";
+import AnimatedText from "@/components/v2/AnimatedText";
+import TrustBento from "@/components/TrustBento";
 import type { MotionState } from "@/components/experience/ExperienceScene";
 
 const ExperienceScene = dynamic(
@@ -25,8 +28,6 @@ const CALENDLY_URL = "https://calendly.com/virtueaze-vr/30min?back=1";
 // Homepage palette — the experience shares the site's dark luxury brand.
 const BG = "#0a0a0a";
 const INK = "#f2f0ea";
-const GOLD = "#c9a44c";
-const GOLD_INK = "#14140f";
 
 // Same film grain as the homepage hero.
 const GRAIN_URL = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`;
@@ -122,6 +123,42 @@ type StepSpec = {
   window: [number, number, number, number];
   className: string;
 };
+
+const pillars = [
+  {
+    title: "Clear Understanding",
+    text: "Buyers see everything. No imagination needed.",
+  },
+  {
+    title: "Clear Confidence",
+    text: "Every space, amenity and view is fully explorable.",
+  },
+  {
+    title: "Clear Decisions",
+    text: "When buyers understand the project, they decide faster.",
+  },
+];
+
+const features = [
+  { title: "Full Exterior View", text: "See the complete building from every angle." },
+  {
+    title: "Nearby Connectivity",
+    text: "Metro, roads, malls, schools all mapped for instant clarity.",
+  },
+  { title: "Day & Night Mode", text: "Realistic lighting, sunrise/sunset, shadow movement." },
+  {
+    title: "Amenities Access",
+    text: "Foyer, lift, parking, clubhouse — explore all shared spaces.",
+  },
+  {
+    title: "Complete Interior Walkthrough",
+    text: "Move room to room, open the balcony, feel the real space.",
+  },
+  {
+    title: "Unit Comparison + Status",
+    text: "Compare layouts & check availability (optional feature).",
+  },
+];
 
 const STEPS: StepSpec[] = [
   {
@@ -337,40 +374,127 @@ export default function LuxuryExperience() {
         </div>
       )}
 
-      <section id="experience-end" className="px-6 py-28 text-center">
-        <p className="eyebrow text-xs uppercase text-[#c9a44c]">VirtuEaze</p>
-        <h2
-          className="mx-auto mt-4 max-w-2xl text-4xl font-semibold tracking-tight md:text-5xl"
-          style={{ color: INK }}
-        >
-          Walk the twin yourself.
-        </h2>
-        <p className="mx-auto mt-5 max-w-xl text-lg text-[#f2f0ea]/60">
-          Bring this experience to your next launch — from drawings to a live,
-          explorable digital twin.
-        </p>
-        <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
-          <motion.a
-            whileHover={{ y: -2 }}
-            href={CALENDLY_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="rounded-full px-8 py-3 text-sm font-medium transition-opacity hover:opacity-90"
-            style={{ backgroundColor: GOLD, color: GOLD_INK }}
-          >
-            Book Demo
-          </motion.a>
-          <motion.span whileHover={{ y: -2 }} className="inline-block">
+      {/* Below-the-fold content in the homepage's exact styling. */}
+      <div id="experience-end" className="bg-background text-foreground">
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-7xl px-6 pb-16 pt-20 lg:px-12">
+            <FadeIn>
+              <span className="eyebrow text-xs uppercase text-accent">
+                Why VirtuEaze
+              </span>
+            </FadeIn>
+            <div className="mt-10 grid grid-cols-1 gap-12 sm:grid-cols-3">
+              {pillars.map((pillar, i) => (
+                <FadeIn
+                  key={pillar.title}
+                  delay={i * 0.1}
+                  className="border-t border-border pt-6"
+                >
+                  <h2 className="text-lg font-medium">{pillar.title}</h2>
+                  <p className="mt-2 text-sm text-foreground/60">
+                    {pillar.text}
+                  </p>
+                </FadeIn>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <TrustBento />
+
+        <section className="border-t border-border">
+          <div className="mx-auto max-w-7xl px-6 py-24 lg:px-12">
+            <FadeIn>
+              <span className="eyebrow text-xs uppercase text-accent">
+                Inside the Twin
+              </span>
+              <h2 className="mt-4 max-w-2xl text-4xl font-semibold tracking-tight sm:text-5xl">
+                Everything a buyer wants to know, one tap away.
+              </h2>
+            </FadeIn>
+            <div className="mt-16 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
+              {features.map((feature, i) => (
+                <FadeIn
+                  key={feature.title}
+                  delay={(i % 3) * 0.1}
+                  className="border-t border-border pt-6"
+                >
+                  <p className="eyebrow text-xs uppercase text-foreground/40">
+                    {String(i + 1).padStart(2, "0")}
+                  </p>
+                  <h3 className="mt-2 text-lg font-medium">{feature.title}</h3>
+                  <p className="mt-2 text-sm text-foreground/60">
+                    {feature.text}
+                  </p>
+                </FadeIn>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="border-t border-border">
+          <div className="mx-auto max-w-4xl px-6 py-24 text-center lg:px-12">
+            <AnimatedText
+              text="“VirtuEaze helped us explain the project clearly. Buyers understood the layout, views and amenities in the first meeting.”"
+              className="text-2xl font-light leading-relaxed text-foreground/90 sm:text-3xl"
+            />
+            <FadeIn>
+              <p className="eyebrow mt-8 text-xs uppercase text-accent">
+                Senior Sales Executive
+              </p>
+            </FadeIn>
+          </div>
+        </section>
+
+        <section className="border-t border-border">
+          <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-8 px-6 py-24 lg:flex-row lg:items-center lg:px-12">
+            <FadeIn>
+              <span className="eyebrow text-xs uppercase text-accent">
+                Featured Projects
+              </span>
+              <h2 className="mt-4 max-w-xl text-4xl font-semibold tracking-tight">
+                See the twin behind the tower.
+              </h2>
+            </FadeIn>
             <Link
-              href="/"
-              className="inline-block rounded-full border border-[#f2f0ea]/30 px-8 py-3 text-sm font-medium transition-colors hover:border-[#c9a44c]"
-              style={{ color: INK }}
+              href="/projects"
+              className="whitespace-nowrap rounded-full border border-border px-7 py-3 text-sm font-medium transition-colors hover:border-accent"
             >
-              Back to Home
+              View All Projects
             </Link>
-          </motion.span>
-        </div>
-      </section>
+          </div>
+        </section>
+
+        <section className="border-t border-border">
+          <div className="mx-auto max-w-7xl px-6 py-24 text-center lg:px-12">
+            <FadeIn>
+              <h2 className="text-4xl font-semibold tracking-tight sm:text-5xl">
+                Want to increase conversion?
+              </h2>
+              <p className="mx-auto mt-4 max-w-md text-foreground/60">
+                Sell your property before you build it — bring VirtuEaze into
+                your next launch.
+              </p>
+            </FadeIn>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+              <a
+                href={CALENDLY_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-full bg-accent px-8 py-3 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90"
+              >
+                Book a Demo
+              </a>
+              <Link
+                href="/"
+                className="rounded-full border border-border px-8 py-3 text-sm font-medium transition-colors hover:border-accent"
+              >
+                Back to Home
+              </Link>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
