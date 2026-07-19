@@ -24,28 +24,33 @@ type Frame = {
 const frames: Frame[] = [
   {
     src: "/images/hero-tower-sunset.jpg",
+    daySrc: "/images/entry-01-skyline-day.jpg",
     alt: "Skyline view of the tower at sunset",
   },
   {
     src: "/images/entry-02-approach.jpg",
+    daySrc: "/images/entry-02-approach-day.jpg",
     alt: "Approaching the tower's crown",
     chapter: "01 — Ascent",
     line: "Rising to meet the light.",
   },
   {
     src: "/images/entry-03-rooftop.jpg",
+    daySrc: "/images/entry-03-rooftop-day.jpg",
     alt: "Rooftop of the tower",
     chapter: "02 — The Crown",
     line: "The city, laid at your feet.",
   },
   {
     src: "/images/entry-04-cutaway.jpg",
+    daySrc: "/images/entry-04-cutaway-day.jpg",
     alt: "Cutaway view revealing the penthouse interior",
     chapter: "03 — The Reveal",
     line: "Every room, opened to view.",
   },
   {
     src: "/images/entry-05-interior.jpg",
+    daySrc: "/images/entry-05-interior-day.jpg",
     alt: "Inside the penthouse living room",
     chapter: "04 — The Interior",
     line: "Step into a space not yet built.",
