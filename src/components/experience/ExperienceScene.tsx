@@ -651,43 +651,60 @@ function TowerSwitch({
   );
 }
 
+type CityItem = {
+  m: THREE.Matrix4;
+  c: THREE.Color;
+  x: number;
+  z: number;
+  w: number;
+  d: number;
+  h: number;
+};
+
+// Deterministic city massing shared by the blocks and their lit windows.
+function makeCityData(): CityItem[] {
+  const rng = (() => {
+    let s = 1337;
+    return () => {
+      s = (s * 16807) % 2147483647;
+      return s / 2147483647;
+    };
+  })();
+  const items: CityItem[] = [];
+  const m = new THREE.Matrix4();
+  const q = new THREE.Quaternion();
+  const scale = new THREE.Vector3();
+  const posV = new THREE.Vector3();
+  let placed = 0;
+  let guard = 0;
+  while (placed < 200 && guard++ < 2000) {
+    const gx = Math.floor(rng() * 16) - 8;
+    const gz = Math.floor(rng() * 16) - 8;
+    if (Math.abs(gx) < 2 && Math.abs(gz) < 2) continue; // tower plot + park
+    const x = gx * 17 + (rng() - 0.5) * 4;
+    const z = gz * 17 + (rng() - 0.5) * 4;
+    const h = 3 + rng() * rng() * 13;
+    const w = 5 + rng() * 5;
+    const d = 5 + rng() * 5;
+    posV.set(x, h / 2, z);
+    scale.set(w, h, d);
+    items.push({
+      m: m.clone().compose(posV, q, scale),
+      c: new THREE.Color("#575049").offsetHSL(0, 0, (rng() - 0.5) * 0.06),
+      x,
+      z,
+      w,
+      d,
+      h,
+    });
+    placed++;
+  }
+  return items;
+}
+
 function City() {
   const ref = useRef<THREE.InstancedMesh>(null);
-  const COUNT = 200;
-  const data = useMemo(() => {
-    const rng = (() => {
-      let s = 1337;
-      return () => {
-        s = (s * 16807) % 2147483647;
-        return s / 2147483647;
-      };
-    })();
-    const items: { m: THREE.Matrix4; c: THREE.Color }[] = [];
-    const m = new THREE.Matrix4();
-    const q = new THREE.Quaternion();
-    const scale = new THREE.Vector3();
-    const posV = new THREE.Vector3();
-    let placed = 0;
-    let guard = 0;
-    while (placed < COUNT && guard++ < 2000) {
-      const gx = Math.floor(rng() * 16) - 8;
-      const gz = Math.floor(rng() * 16) - 8;
-      if (Math.abs(gx) < 2 && Math.abs(gz) < 2) continue; // tower plot + park
-      const x = gx * 17 + (rng() - 0.5) * 4;
-      const z = gz * 17 + (rng() - 0.5) * 4;
-      const h = 3 + rng() * rng() * 13;
-      const w = 5 + rng() * 5;
-      const d = 5 + rng() * 5;
-      posV.set(x, h / 2, z);
-      scale.set(w, h, d);
-      items.push({
-        m: m.clone().compose(posV, q, scale),
-        c: new THREE.Color("#575049").offsetHSL(0, 0, (rng() - 0.5) * 0.06),
-      });
-      placed++;
-    }
-    return items;
-  }, []);
+  const data = useMemo(() => makeCityData(), []);
 
   return (
     <instancedMesh
@@ -706,6 +723,62 @@ function City() {
     >
       <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial color="#575049" roughness={0.95} />
+    </instancedMesh>
+  );
+}
+
+/** Warm lit windows scattered across the city blocks — dusk realism. */
+function CityLights() {
+  const data = useMemo(() => {
+    const rng = (() => {
+      let s = 555;
+      return () => {
+        s = (s * 16807) % 2147483647;
+        return s / 2147483647;
+      };
+    })();
+    const city = makeCityData();
+    const mats: THREE.Matrix4[] = [];
+    const m = new THREE.Matrix4();
+    const q = new THREE.Quaternion();
+    const one = new THREE.Vector3(1, 1, 1);
+    const pos = new THREE.Vector3();
+    const yAxis = new THREE.Vector3(0, 1, 0);
+    for (const b of city) {
+      const count = 1 + Math.floor(rng() * 3);
+      for (let i = 0; i < count; i++) {
+        const face = Math.floor(rng() * 4);
+        const along = (rng() - 0.5) * 0.8;
+        const y = 1 + rng() * Math.max(b.h - 2, 0.5);
+        if (face === 0) pos.set(b.x + along * b.w, y, b.z + b.d / 2 + 0.05);
+        else if (face === 1)
+          pos.set(b.x + along * b.w, y, b.z - b.d / 2 - 0.05);
+        else if (face === 2) pos.set(b.x + b.w / 2 + 0.05, y, b.z + along * b.d);
+        else pos.set(b.x - b.w / 2 - 0.05, y, b.z + along * b.d);
+        const rotY = face === 0 ? 0 : face === 1 ? Math.PI : face === 2 ? Math.PI / 2 : -Math.PI / 2;
+        q.setFromAxisAngle(yAxis, rotY);
+        mats.push(m.clone().compose(pos, q, one));
+      }
+    }
+    return mats;
+  }, []);
+
+  return (
+    <instancedMesh
+      ref={(node) => {
+        if (!node) return;
+        data.forEach((mat, i) => node.setMatrixAt(i, mat));
+        node.instanceMatrix.needsUpdate = true;
+      }}
+      args={[undefined, undefined, data.length]}
+    >
+      <planeGeometry args={[0.55, 0.4]} />
+      <meshBasicMaterial
+        color="#ffb066"
+        transparent
+        opacity={0.9}
+        side={THREE.DoubleSide}
+      />
     </instancedMesh>
   );
 }
@@ -844,13 +917,49 @@ function SkyDome() {
       `,
       fragmentShader: `
         varying vec3 vPos;
+        float hash(vec2 p) {
+          return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+        }
+        float noise(vec2 p) {
+          vec2 i = floor(p);
+          vec2 f = fract(p);
+          f = f * f * (3.0 - 2.0 * f);
+          return mix(
+            mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
+            mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x),
+            f.y);
+        }
+        float fbm(vec2 p) {
+          float v = 0.0;
+          float a = 0.5;
+          for (int i = 0; i < 5; i++) {
+            v += a * noise(p);
+            p *= 2.15;
+            a *= 0.55;
+          }
+          return v;
+        }
         void main() {
-          float h = normalize(vPos).y;
-          vec3 horizon = vec3(0.93, 0.58, 0.33);
-          vec3 mid = vec3(0.56, 0.39, 0.44);
-          vec3 top = vec3(0.19, 0.21, 0.30);
-          vec3 col = mix(horizon, mid, smoothstep(0.0, 0.2, h));
-          col = mix(col, top, smoothstep(0.2, 0.62, h));
+          vec3 d = normalize(vPos);
+          float h = d.y;
+          vec3 horizon = vec3(0.93, 0.55, 0.30);
+          vec3 mid = vec3(0.55, 0.37, 0.43);
+          vec3 top = vec3(0.16, 0.18, 0.28);
+          vec3 col = mix(horizon, mid, smoothstep(0.0, 0.22, h));
+          col = mix(col, top, smoothstep(0.22, 0.6, h));
+          // Sun glow aligned with the key light
+          vec3 sun = normalize(vec3(0.9, 0.32, 0.4));
+          float s = max(dot(d, sun), 0.0);
+          col += vec3(1.0, 0.55, 0.25) * pow(s, 18.0) * 0.8;
+          col += vec3(1.0, 0.7, 0.4) * pow(s, 4.0) * 0.22;
+          // Streaked dusk clouds in a band above the horizon
+          float band = smoothstep(0.02, 0.12, h) * (1.0 - smoothstep(0.3, 0.52, h));
+          vec2 uv = vec2(atan(d.z, d.x) * 2.2, h * 6.0);
+          float c = fbm(uv * vec2(1.0, 2.3));
+          float cl = smoothstep(0.45, 0.75, c) * band;
+          vec3 cloudCol = mix(vec3(0.82, 0.44, 0.4), vec3(0.98, 0.72, 0.52),
+            smoothstep(0.0, 0.26, h));
+          col = mix(col, cloudCol, cl * 0.75);
           gl_FragColor = vec4(col, 1.0);
         }
       `,
@@ -880,11 +989,32 @@ function Roads() {
   );
 }
 
+// Drop a real sunset HDRI here (e.g. from Poly Haven) for photoreal sky and
+// lighting — used automatically when present.
+const SKY_HDRI_URL = "/hdri/sky.hdr";
+
+function HdriSky() {
+  return <Environment files={SKY_HDRI_URL} background />;
+}
+
 export default function ExperienceScene({
   motion,
 }: {
   motion: React.MutableRefObject<MotionState>;
 }) {
+  const [hasHdri, setHasHdri] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    fetch(SKY_HDRI_URL, { method: "HEAD" })
+      .then((r) => {
+        if (alive && r.ok) setHasHdri(true);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   return (
     <Canvas
       shadows
@@ -895,7 +1025,7 @@ export default function ExperienceScene({
         gl.toneMappingExposure = 1.12;
       }}
     >
-      <fog attach="fog" args={["#6e5a58", 55, 280]} />
+      <fog attach="fog" args={["#6e5a58", 45, 270]} />
       <hemisphereLight args={["#e0a06a", "#2e2a28", 0.55]} />
       <ambientLight intensity={0.12} />
       {/* Warm sunset key with crisper shadows */}
@@ -927,27 +1057,38 @@ export default function ExperienceScene({
         color="#ffb677"
       />
 
-      {/* Procedural sunset reflections for the glass — fully offline. */}
-      <Environment resolution={64} frames={1}>
-        <Lightformer
-          intensity={2.5}
-          color="#ff9e5e"
-          position={[10, 2, 8]}
-          scale={[18, 4, 1]}
-        />
-        <Lightformer
-          intensity={0.7}
-          color="#5a6a8a"
-          position={[0, 12, 0]}
-          rotation={[Math.PI / 2, 0, 0]}
-          scale={[20, 20, 1]}
-        />
-      </Environment>
-
-      <SkyDome />
+      {hasHdri ? (
+        /* Photoreal path: real HDRI drives sky and reflections. */
+        <GlbBoundary fallback={<SkyDome />}>
+          <Suspense fallback={<SkyDome />}>
+            <HdriSky />
+          </Suspense>
+        </GlbBoundary>
+      ) : (
+        <>
+          {/* Procedural sunset reflections for the glass — fully offline. */}
+          <Environment resolution={64} frames={1}>
+            <Lightformer
+              intensity={2.5}
+              color="#ff9e5e"
+              position={[10, 2, 8]}
+              scale={[18, 4, 1]}
+            />
+            <Lightformer
+              intensity={0.7}
+              color="#5a6a8a"
+              position={[0, 12, 0]}
+              rotation={[Math.PI / 2, 0, 0]}
+              scale={[20, 20, 1]}
+            />
+          </Environment>
+          <SkyDome />
+        </>
+      )}
       <Particles />
       <Mountains />
       <City />
+      <CityLights />
       <Trees />
       <Roads />
       <TowerSwitch motion={motion} />

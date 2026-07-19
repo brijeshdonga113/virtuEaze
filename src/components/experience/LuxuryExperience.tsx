@@ -11,8 +11,7 @@ import {
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { motion } from "framer-motion";
 import FloorPlanSvg from "@/components/FloorPlanSvg";
 import type { MotionState } from "@/components/experience/ExperienceScene";
 
@@ -34,15 +33,6 @@ const GRAIN_URL = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
 
 const SMOOTHING = 6;
 const SCROLL_LENGTH_VH = 640;
-
-const NAV_LINKS = [
-  { label: "Home", href: "/" },
-  { label: "Solutions", href: "/#" },
-  { label: "Showcase", href: "/projects" },
-  { label: "Technology", href: "/hero-preview" },
-  { label: "About", href: "/about" },
-  { label: "Contact", href: "/contact" },
-];
 
 function smoothstep(a: number, b: number, x: number) {
   const t = Math.min(Math.max((x - a) / (b - a), 0), 1);
@@ -82,136 +72,33 @@ class SceneBoundary extends Component<
   }
 }
 
-function GlassNav() {
-  const [scrolled, setScrolled] = useState(false);
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  return (
-    <header
-      className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
-        scrolled || open
-          ? "border-b border-white/10 bg-[#0a0a0a]/70 shadow-[0_2px_24px_rgba(0,0,0,0.35)] backdrop-blur-md"
-          : "border-b border-transparent bg-transparent"
-      }`}
-    >
-      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
-        <Link
-          href="/experience"
-          className="text-2xl font-light uppercase tracking-[0.3em]"
-          style={{ color: INK }}
-        >
-          Virtu<span style={{ color: GOLD }}>Eaze</span>
-        </Link>
-
-        <div className="hidden items-center gap-7 md:flex">
-          {NAV_LINKS.map((l) => (
-            <Link
-              key={l.label}
-              href={l.href}
-              className="text-sm font-medium text-[#f2f0ea]/75 transition-all hover:text-[#f2f0ea]"
-            >
-              {l.label}
-            </Link>
-          ))}
-        </div>
-
-        <div className="flex items-center gap-3">
-          <a
-            href={CALENDLY_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="hidden rounded-full px-5 py-2 text-sm font-medium transition-opacity hover:opacity-90 md:block"
-            style={{ backgroundColor: GOLD, color: GOLD_INK }}
-          >
-            Book Demo
-          </a>
-          <button
-            type="button"
-            aria-label="Toggle menu"
-            aria-expanded={open}
-            onClick={() => setOpen((v) => !v)}
-            className="rounded-full p-2 text-[#f2f0ea] md:hidden"
-          >
-            {open ? <X className="size-6" /> : <Menu className="size-6" />}
-          </button>
-        </div>
-      </nav>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.98 }}
-            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="mx-4 mb-4 rounded-2xl border border-white/10 bg-[#141412]/95 p-5 shadow-xl backdrop-blur-md md:hidden"
-          >
-            <div className="flex flex-col gap-1">
-              {NAV_LINKS.map((l) => (
-                <Link
-                  key={l.label}
-                  href={l.href}
-                  onClick={() => setOpen(false)}
-                  className="rounded-lg px-3 py-2.5 text-base font-medium text-[#f2f0ea]/85 transition-colors hover:bg-white/5 hover:text-[#f2f0ea]"
-                >
-                  {l.label}
-                </Link>
-              ))}
-              <a
-                href={CALENDLY_URL}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-3 rounded-full px-5 py-2.5 text-center text-sm font-medium"
-                style={{ backgroundColor: GOLD, color: GOLD_INK }}
-              >
-                Book Demo
-              </a>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </header>
-  );
-}
-
+/** Hero block in the homepage's exact layout: left-aligned, gold eyebrow,
+    bold tracking-tight headline, gold + outline pill CTAs. */
 function HeroCopy() {
   return (
-    <>
-      <p className="eyebrow text-xs font-semibold uppercase text-[#c9a44c]">
+    <div className="mx-auto max-w-7xl text-left">
+      <span className="eyebrow text-xs uppercase text-[#c9a44c]">
         Interactive Real Estate
-      </p>
-      <h1 className="mt-5 font-light leading-none tracking-tighter">
-        <span className="block text-6xl text-[#f2f0ea]/45 md:text-7xl lg:text-8xl">
-          Experience.
-        </span>
-        <span
-          className="-mt-2 block text-6xl md:-mt-3 md:text-7xl lg:text-8xl"
-          style={{ color: INK }}
-        >
-          Tomorrow&apos;s Homes.
-        </span>
+      </span>
+      <h1
+        className="mt-4 max-w-lg text-4xl font-bold tracking-tight sm:text-5xl"
+        style={{ color: INK }}
+      >
+        Experience tomorrow&apos;s homes today.
       </h1>
-      <p className="mx-auto mt-7 max-w-[700px] text-lg text-[#f2f0ea]/65 md:text-xl">
+      <p className="mt-6 max-w-md text-[#f2f0ea]/70">
         Transform blueprints into immersive digital experiences that help
         buyers explore, understand and purchase with confidence.
       </p>
-      <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
+      <div className="mt-8 flex flex-wrap items-center gap-4">
         <motion.a
           whileHover={{ y: -2 }}
           href={CALENDLY_URL}
           target="_blank"
           rel="noreferrer"
-          className="rounded-full px-8 py-3 text-sm font-medium transition-opacity hover:opacity-90"
-          style={{ backgroundColor: GOLD, color: GOLD_INK }}
+          className="rounded-full bg-accent px-8 py-3 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90"
         >
-          Book Demo
+          Book a Demo
         </motion.a>
         <motion.span whileHover={{ y: -2 }} className="inline-block">
           <a
@@ -223,7 +110,7 @@ function HeroCopy() {
           </a>
         </motion.span>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -333,8 +220,6 @@ export default function LuxuryExperience() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: BG, color: INK }}>
-      <GlassNav />
-
       {mode !== "lite" ? (
         <div
           ref={sectionRef}
@@ -365,17 +250,17 @@ export default function LuxuryExperience() {
 
             <div
               ref={heroRef}
-              className="absolute inset-x-0 top-[54%] z-10 -translate-y-1/2 px-6 text-center"
+              className="absolute inset-x-0 bottom-24 z-10 px-6 sm:bottom-28 lg:px-12"
             >
               <HeroCopy />
             </div>
 
             <div
               ref={hintRef}
-              className="pointer-events-none absolute inset-x-0 bottom-8 z-10 text-center"
+              className="pointer-events-none absolute inset-x-0 top-20 z-10 px-6 text-center sm:top-28"
             >
               <span className="eyebrow text-xs uppercase text-[#c9a44c]">
-                Scroll to explore
+                Scroll to explore the building
               </span>
             </div>
 
@@ -446,7 +331,7 @@ export default function LuxuryExperience() {
             className="object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/45 to-transparent" />
-          <div className="absolute inset-x-0 top-[52%] -translate-y-1/2 px-6 text-center">
+          <div className="absolute inset-x-0 bottom-24 px-6 sm:bottom-28 lg:px-12">
             <HeroCopy />
           </div>
         </div>
