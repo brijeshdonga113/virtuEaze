@@ -23,6 +23,11 @@ import * as THREE from "three";
 // procedural tower automatically — the camera choreography stays identical.
 const TOWER_GLB_URL = "/models/tower.glb";
 
+// Drop a sky photo here to replace the procedural gradient dome behind the
+// tower. A flat photo reads as a fixed matte backdrop (no wrap); a 360°
+// equirectangular panorama wraps the whole sky.
+const SKY_IMAGE_URL = "/images/sky.jpg";
+
 // Shared, mutated once per frame by the DOM scroll rig in LuxuryExperience.
 export type MotionState = { p: number };
 
@@ -997,23 +1002,76 @@ function HdriSky() {
   return <Environment files={SKY_HDRI_URL} background />;
 }
 
-export default function ExperienceScene({
-  motion,
-}: {
-  motion: React.MutableRefObject<MotionState>;
-}) {
-  const [hasHdri, setHasHdri] = useState(false);
+// A flat sky photo as a fixed matte backdrop behind the scene. It doesn't
+// light the tower (a photo can't), so procedural Lightformer reflections are
+// kept for the glass. The texture is attached as the scene background
+// declaratively (no scene mutation), with the procedural dome shown until it
+// finishes loading.
+function PhotoSky() {
+  const [texture, setTexture] = useState<THREE.Texture | null>(null);
   useEffect(() => {
     let alive = true;
-    fetch(SKY_HDRI_URL, { method: "HEAD" })
+    const loader = new THREE.TextureLoader();
+    loader.load(SKY_IMAGE_URL, (t) => {
+      t.colorSpace = THREE.SRGBColorSpace;
+      if (alive) setTexture(t);
+      else t.dispose();
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return (
+    <>
+      {texture ? (
+        <primitive object={texture} attach="background" />
+      ) : (
+        <SkyDome />
+      )}
+      <Environment resolution={64} frames={1}>
+        <Lightformer
+          intensity={2.5}
+          color="#ff9e5e"
+          position={[10, 2, 8]}
+          scale={[18, 4, 1]}
+        />
+        <Lightformer
+          intensity={0.7}
+          color="#9fb4cf"
+          position={[0, 12, 0]}
+          rotation={[Math.PI / 2, 0, 0]}
+          scale={[20, 20, 1]}
+        />
+      </Environment>
+    </>
+  );
+}
+
+function useAssetPresent(url: string) {
+  const [present, setPresent] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    fetch(url, { method: "HEAD" })
       .then((r) => {
-        if (alive && r.ok) setHasHdri(true);
+        if (alive && r.ok) setPresent(true);
       })
       .catch(() => {});
     return () => {
       alive = false;
     };
-  }, []);
+  }, [url]);
+  return present;
+}
+
+export default function ExperienceScene({
+  motion,
+}: {
+  motion: React.MutableRefObject<MotionState>;
+}) {
+  // Precedence: HDRI (sky + light + reflections) → flat photo backdrop →
+  // procedural gradient dome.
+  const hasHdri = useAssetPresent(SKY_HDRI_URL);
+  const hasSkyImage = useAssetPresent(SKY_IMAGE_URL);
 
   return (
     <Canvas
@@ -1025,7 +1083,12 @@ export default function ExperienceScene({
         gl.toneMappingExposure = 1.12;
       }}
     >
-      <fog attach="fog" args={["#6e5a58", 45, 270]} />
+      {/* Fog tuned to the active sky so the horizon blends: dusk mauve for
+          the procedural/HDRI dusk, cool haze under a flat daytime photo. */}
+      <fog
+        attach="fog"
+        args={[hasSkyImage && !hasHdri ? "#aebccb" : "#6e5a58", 45, 270]}
+      />
       <hemisphereLight args={["#e0a06a", "#2e2a28", 0.55]} />
       <ambientLight intensity={0.12} />
       {/* Warm sunset key with crisper shadows */}
@@ -1062,6 +1125,13 @@ export default function ExperienceScene({
         <GlbBoundary fallback={<SkyDome />}>
           <Suspense fallback={<SkyDome />}>
             <HdriSky />
+          </Suspense>
+        </GlbBoundary>
+      ) : hasSkyImage ? (
+        /* Flat sky photo as a matte backdrop, procedural reflections kept. */
+        <GlbBoundary fallback={<SkyDome />}>
+          <Suspense fallback={<SkyDome />}>
+            <PhotoSky />
           </Suspense>
         </GlbBoundary>
       ) : (
