@@ -1,6 +1,7 @@
 import Link from "next/link";
 import EntrySequence from "@/components/EntrySequence";
 import ModelViewer from "@/components/ModelViewer";
+import ScrollVideo from "@/components/ScrollVideo";
 import TrustBento from "@/components/TrustBento";
 
 const pillars = [
@@ -70,6 +71,20 @@ export default function HeroPreviewPage() {
   return (
     <>
       <EntrySequence />
+
+      {/* Scroll-scrubbed fly-through: the video's motion is driven by the
+          scroll position. Drop the Higgsfield render at
+          public/videos/twin-flythrough.mp4 to replace the stand-in WebM —
+          the mp4 source is preferred automatically once it exists. */}
+      <ScrollVideo
+        sources={[
+          { src: "/videos/twin-flythrough.mp4", type: "video/mp4" },
+          { src: "/videos/twin-flythrough.webm", type: "video/webm" },
+        ]}
+        poster="/images/twin-seq/frame_0001.jpg"
+        eyebrow="Motion Control"
+        line="One continuous take, driven by your scroll."
+      />
 
       <section className="border-b border-border">
         <div className="mx-auto max-w-7xl px-6 pb-16 pt-20 lg:px-12">
