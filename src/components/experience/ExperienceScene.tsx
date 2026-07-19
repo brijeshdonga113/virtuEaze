@@ -51,7 +51,8 @@ const STATIONS = [
   { at: 0.4, pos: [-16, 20, 23], look: [0, 19, 0] }, // closer to facade
   { at: 0.55, pos: [-11.5, FOCUS_Y + 1.4, 17], look: [0, FOCUS_Y, 0] }, // apartment
   { at: 0.7, pos: [-10.5, FOCUS_Y + 1.6, 14.5], look: [0, FOCUS_Y, 0] }, // walls fade
-  { at: 0.85, pos: [14, FOCUS_Y + 13, 16], look: [0, FOCUS_Y + 1, 0] }, // floor plan
+  { at: 0.82, pos: [4.6, FOCUS_Y + 0.12, 4.6], look: [-1.3, FOCUS_Y - 0.4, -1.3] }, // inside the residence
+  { at: 0.9, pos: [14, FOCUS_Y + 13, 16], look: [0, FOCUS_Y + 1, 0] }, // floor plan
   { at: 1.0, pos: [0, FOCUS_Y + 3.4, 4], look: [0, FOCUS_Y, -2] }, // step inside
 ] as const;
 
@@ -96,8 +97,9 @@ function CameraRig({ motion }: { motion: React.MutableRefObject<MotionState> }) 
     const fit = fitState.value;
     if (fit < 1) {
       const p = motion.current.p;
+      // Held through the interior beat, released for the overhead plan.
       const closeness =
-        smoothstep(0.42, 0.55, p) * (1 - smoothstep(0.78, 0.88, p));
+        smoothstep(0.42, 0.55, p) * (1 - smoothstep(0.86, 0.93, p));
       goalPos.lerp(goalLook, (1 - fit) * 0.5 * closeness);
     }
     goalPos.lerpVectors(INTRO_POS, goalPos, intro);
@@ -351,7 +353,7 @@ function Tower({ motion }: { motion: React.MutableRefObject<MotionState> }) {
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
         <circleGeometry args={[20, 40]} />
-        <meshStandardMaterial color="#eae6dc" roughness={1} />
+        <meshStandardMaterial color="#3c3833" roughness={1} />
       </mesh>
 
       {/* Focus apartment: warm lit volume that pokes just past the glass so
@@ -432,7 +434,8 @@ function GlbTower({
       bandFitted.current = true;
     }
 
-    const t = smoothstep(0.62, 0.8, motion.current.p);
+    const p = motion.current.p;
+    const t = smoothstep(0.62, 0.8, p);
     const opacity = 1 - t * 0.72;
     const targets = wallMats.current.length
       ? wallMats.current
@@ -441,6 +444,12 @@ function GlbTower({
       mm.transparent = opacity < 0.999;
       mm.opacity = opacity;
       mm.depthWrite = opacity > 0.6;
+    }
+
+    // The glow band yields as the camera enters the residence.
+    if (bandRef.current) {
+      const mat = bandRef.current.material as THREE.MeshStandardMaterial;
+      mat.opacity = 0.25 * (1 - smoothstep(0.74, 0.8, p));
     }
   });
 
@@ -505,6 +514,91 @@ function GlbTower({
           opacity={0.25}
         />
       </mesh>
+
+      {/* Staged residence for the inside-view beat — a cantilevered glass
+          suite on the tower's corner, so the camera always has a furnished
+          room to arrive in regardless of the model's internal geometry. */}
+      <group position={[1.9, FOCUS_Y - 0.48, 1.9]}>
+        <mesh position={[0, 0, 0]}>
+          <boxGeometry args={[2.4, 0.04, 2.4]} />
+          <meshStandardMaterial color="#7a6a52" roughness={0.65} />
+        </mesh>
+        <mesh position={[0, 0.96, 0]}>
+          <boxGeometry args={[2.4, 0.04, 2.4]} />
+          <meshStandardMaterial color="#2b2926" roughness={0.9} />
+        </mesh>
+        {/* Sofa */}
+        <mesh position={[-0.35, 0.13, 0.25]}>
+          <boxGeometry args={[0.95, 0.2, 0.42]} />
+          <meshStandardMaterial color="#b8a488" roughness={0.85} />
+        </mesh>
+        <mesh position={[-0.35, 0.3, 0.45]}>
+          <boxGeometry args={[0.95, 0.22, 0.08]} />
+          <meshStandardMaterial color="#a8957a" roughness={0.85} />
+        </mesh>
+        {/* Coffee table */}
+        <mesh position={[-0.32, 0.1, -0.25]}>
+          <cylinderGeometry args={[0.2, 0.2, 0.14, 20]} />
+          <meshStandardMaterial
+            color="#8a6f4e"
+            roughness={0.4}
+            metalness={0.2}
+          />
+        </mesh>
+        {/* Media wall */}
+        <mesh position={[-1.08, 0.5, 0]}>
+          <boxGeometry args={[0.05, 0.72, 1.3]} />
+          <meshStandardMaterial color="#1f1d1a" roughness={0.5} />
+        </mesh>
+        {/* Glass envelope so the beat reads as a real room looking out at
+            the skyline — independent of the host model's inner geometry. */}
+        {[
+          { pos: [0, 0.5, 1.2] as const, rot: 0 },
+          { pos: [0, 0.5, -1.2] as const, rot: 0 },
+          { pos: [1.2, 0.5, 0] as const, rot: Math.PI / 2 },
+          { pos: [-1.2, 0.5, 0] as const, rot: Math.PI / 2 },
+        ].map((w, i) => (
+          <mesh key={`gw-${i}`} position={[...w.pos]} rotation={[0, w.rot, 0]}>
+            <planeGeometry args={[2.4, 0.96]} />
+            <meshStandardMaterial
+              color="#cfd8e0"
+              metalness={0.5}
+              roughness={0.12}
+              transparent
+              opacity={0.16}
+              side={THREE.DoubleSide}
+              depthWrite={false}
+            />
+          </mesh>
+        ))}
+        {[
+          [1.2, 1.2],
+          [-1.2, 1.2],
+          [1.2, -1.2],
+          [-1.2, -1.2],
+        ].map(([x, z], i) => (
+          <mesh key={`gp-${i}`} position={[x, 0.5, z]}>
+            <boxGeometry args={[0.06, 0.96, 0.06]} />
+            <meshStandardMaterial color="#1f1d1a" roughness={0.5} />
+          </mesh>
+        ))}
+
+        {/* Warm lamps */}
+        <pointLight
+          position={[0.55, 0.7, 0.55]}
+          intensity={2.2}
+          distance={4}
+          decay={2}
+          color="#ffc98a"
+        />
+        <pointLight
+          position={[-0.7, 0.6, -0.6]}
+          intensity={1.4}
+          distance={3.5}
+          decay={2}
+          color="#ffb677"
+        />
+      </group>
     </group>
   );
 }
@@ -588,7 +682,7 @@ function City() {
       scale.set(w, h, d);
       items.push({
         m: m.clone().compose(posV, q, scale),
-        c: new THREE.Color("#d6d4cd").offsetHSL(0, 0, (rng() - 0.5) * 0.06),
+        c: new THREE.Color("#575049").offsetHSL(0, 0, (rng() - 0.5) * 0.06),
       });
       placed++;
     }
@@ -611,7 +705,7 @@ function City() {
       castShadow
     >
       <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color="#d9d6cd" roughness={0.95} />
+      <meshStandardMaterial color="#575049" roughness={0.95} />
     </instancedMesh>
   );
 }
@@ -657,7 +751,7 @@ function Trees() {
       args={[undefined, undefined, data.length]}
     >
       <sphereGeometry args={[1, 8, 6]} />
-      <meshStandardMaterial color="#7f9370" roughness={1} />
+      <meshStandardMaterial color="#41523e" roughness={1} />
     </instancedMesh>
   );
 }
@@ -686,7 +780,7 @@ function Mountains() {
       {cones.map((c, i) => (
         <mesh key={i} position={c.pos}>
           <coneGeometry args={[c.w, c.h, 5]} />
-          <meshStandardMaterial color="#c7cbd1" roughness={1} flatShading />
+          <meshStandardMaterial color="#3d4351" roughness={1} flatShading />
         </mesh>
       ))}
     </>
@@ -752,11 +846,11 @@ function SkyDome() {
         varying vec3 vPos;
         void main() {
           float h = normalize(vPos).y;
-          vec3 horizon = vec3(0.965, 0.815, 0.62);
-          vec3 mid = vec3(0.91, 0.85, 0.78);
-          vec3 top = vec3(0.72, 0.79, 0.85);
-          vec3 col = mix(horizon, mid, smoothstep(0.0, 0.18, h));
-          col = mix(col, top, smoothstep(0.18, 0.6, h));
+          vec3 horizon = vec3(0.93, 0.58, 0.33);
+          vec3 mid = vec3(0.56, 0.39, 0.44);
+          vec3 top = vec3(0.19, 0.21, 0.30);
+          vec3 col = mix(horizon, mid, smoothstep(0.0, 0.2, h));
+          col = mix(col, top, smoothstep(0.2, 0.62, h));
           gl_FragColor = vec4(col, 1.0);
         }
       `,
@@ -776,11 +870,11 @@ function Roads() {
     <group position={[0, 0.03, 0]}>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 12]}>
         <planeGeometry args={[300, 6.5]} />
-        <meshStandardMaterial color="#41464d" roughness={0.95} />
+        <meshStandardMaterial color="#1e2126" roughness={0.95} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, Math.PI / 2]} position={[-12, 0, 0]}>
         <planeGeometry args={[300, 6.5]} />
-        <meshStandardMaterial color="#41464d" roughness={0.95} />
+        <meshStandardMaterial color="#1e2126" roughness={0.95} />
       </mesh>
     </group>
   );
@@ -795,20 +889,20 @@ export default function ExperienceScene({
     <Canvas
       shadows
       dpr={[1, 1.75]}
-      camera={{ fov: 42, near: 0.5, far: 900, position: [64, 10, 88] }}
+      camera={{ fov: 42, near: 0.25, far: 900, position: [64, 10, 88] }}
       gl={{ antialias: true }}
       onCreated={({ gl }) => {
         gl.toneMappingExposure = 1.12;
       }}
     >
-      <fog attach="fog" args={["#ecdfcd", 60, 300]} />
-      <hemisphereLight args={["#f6e8d6", "#b8b2a4", 0.7]} />
-      <ambientLight intensity={0.14} />
+      <fog attach="fog" args={["#6e5a58", 55, 280]} />
+      <hemisphereLight args={["#e0a06a", "#2e2a28", 0.55]} />
+      <ambientLight intensity={0.12} />
       {/* Warm sunset key with crisper shadows */}
       <directionalLight
         position={[95, 34, 42]}
-        intensity={2.4}
-        color="#ffc98f"
+        intensity={2.2}
+        color="#ff9d5c"
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0002}
@@ -821,8 +915,8 @@ export default function ExperienceScene({
       {/* Cool rim from the shadow side separates the tower from the sky */}
       <directionalLight
         position={[-70, 32, -55]}
-        intensity={0.85}
-        color="#dfe4f5"
+        intensity={0.9}
+        color="#7183b0"
       />
       {/* Architectural uplight washing the podium */}
       <pointLight
@@ -836,14 +930,14 @@ export default function ExperienceScene({
       {/* Procedural sunset reflections for the glass — fully offline. */}
       <Environment resolution={64} frames={1}>
         <Lightformer
-          intensity={2.2}
-          color="#ffd9a6"
+          intensity={2.5}
+          color="#ff9e5e"
           position={[10, 2, 8]}
           scale={[18, 4, 1]}
         />
         <Lightformer
-          intensity={0.9}
-          color="#cdd8e2"
+          intensity={0.7}
+          color="#5a6a8a"
           position={[0, 12, 0]}
           rotation={[Math.PI / 2, 0, 0]}
           scale={[20, 20, 1]}
@@ -861,7 +955,7 @@ export default function ExperienceScene({
       {/* Ground */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <circleGeometry args={[320, 48]} />
-        <meshStandardMaterial color="#e7e4db" roughness={1} />
+        <meshStandardMaterial color="#33302c" roughness={1} />
       </mesh>
 
       {/* Soft grounding under the tower; keeps re-baking through the GLB
@@ -884,11 +978,11 @@ export default function ExperienceScene({
             and gold accents bloom — never the sky band. */}
         <Bloom
           mipmapBlur
-          intensity={0.3}
-          luminanceThreshold={0.92}
+          intensity={0.35}
+          luminanceThreshold={0.85}
           luminanceSmoothing={0.14}
         />
-        <Vignette eskil={false} offset={0.22} darkness={0.32} />
+        <Vignette eskil={false} offset={0.22} darkness={0.42} />
       </EffectComposer>
     </Canvas>
   );

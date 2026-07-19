@@ -1,10 +1,4 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-});
 
 export const metadata: Metadata = {
   title: "VirtuEaze — Experience Tomorrow's Homes",
@@ -17,5 +11,5 @@ export default function ExperienceLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <div className={inter.className}>{children}</div>;
+  return children;
 }
