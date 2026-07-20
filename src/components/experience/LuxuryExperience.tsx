@@ -16,7 +16,6 @@ import FloorPlanSvg from "@/components/FloorPlanSvg";
 import FadeIn from "@/components/v2/FadeIn";
 import AnimatedText from "@/components/v2/AnimatedText";
 import TrustBento from "@/components/TrustBento";
-import ScrollVideo from "@/components/ScrollVideo";
 import type { MotionState } from "@/components/experience/ExperienceScene";
 
 const ExperienceScene = dynamic(
@@ -374,18 +373,6 @@ export default function LuxuryExperience() {
           </div>
         </div>
       )}
-
-      {/* TEMP scroll-scrubbed video preview — the clip's playhead follows the
-          scroll (like the building zoom), so frames change as you scroll.
-          Replace public/videos/showcase-temp.mp4 with the real render later
-          (this stand-in is a competitor showcase, not for ship). */}
-      <ScrollVideo
-        sources={[{ src: "/videos/showcase-temp.mp4", type: "video/mp4" }]}
-        poster="/images/hero-tower-sunset.jpg"
-        eyebrow="Cinematic Walkthrough"
-        line="See the twin in motion."
-        lengthVh={320}
-      />
 
       {/* Below-the-fold content in the homepage's exact styling. */}
       <div id="experience-end" className="bg-background text-foreground">
