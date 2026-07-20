@@ -243,15 +243,8 @@ export default function Nav() {
           Virtu<span className="text-accent">Eaze</span>
         </Link>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Link
-            href="/contact"
-            onClick={closeAll}
-            className="rounded-full bg-accent px-4 py-1.5 text-xs font-medium uppercase tracking-[0.15em] text-accent-foreground"
-          >
-            Book a Demo
-          </Link>
           <button
             type="button"
             aria-label="Toggle menu"
@@ -354,6 +347,14 @@ export default function Nav() {
                   </div>
                 );
               })}
+
+              <Link
+                href="/contact"
+                onClick={closeAll}
+                className="mt-4 rounded-full bg-accent px-5 py-3 text-center text-sm font-medium uppercase tracking-[0.15em] text-accent-foreground transition-opacity hover:opacity-90"
+              >
+                Book a Demo
+              </Link>
 
               <div className="mt-6 flex gap-8 border-t border-border pt-6 text-xs text-foreground/50">
                 <Link
