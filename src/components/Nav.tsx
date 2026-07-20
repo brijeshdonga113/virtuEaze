@@ -43,13 +43,13 @@ const menuPanels: MenuPanel[] = [
       {
         title: "Tremont",
         description: "Gota, Ahmedabad — Live Demo",
-        href: "/projects#tremont",
+        href: "/projects/tremont",
         imageSrc: "/images/twin-seq/frame_0012.jpg",
       },
       {
         title: "North Wind Sanctuary",
         description: "Ahmedabad, Gujarat — Case Study",
-        href: "/projects#north-wind-sanctuary",
+        href: "/projects/north-wind-sanctuary",
       },
     ],
   },
