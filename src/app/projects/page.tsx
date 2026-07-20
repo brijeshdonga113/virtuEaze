@@ -71,6 +71,21 @@ export default function ProjectsPage() {
       </div>
 
       <div id="tremont" className="scroll-mt-24">
+        <div className="mx-auto max-w-7xl border-t border-border px-6 pb-2 pt-20 sm:pt-24 lg:px-12">
+          <FadeIn>
+            <span className="eyebrow text-xs uppercase text-accent">
+              Live Demo · Tremont
+            </span>
+            <h2 className="mt-4 max-w-2xl text-3xl font-semibold tracking-tight sm:text-4xl">
+              Explore the Tremont digital twin.
+            </h2>
+            <p className="mt-4 max-w-xl text-foreground/60">
+              Scroll through the film below — exterior, day &amp; night, floor
+              selection, x-ray view, locality and amenities, all in one
+              continuous take.
+            </p>
+          </FadeIn>
+        </div>
         <TwinShowcase />
       </div>
 
